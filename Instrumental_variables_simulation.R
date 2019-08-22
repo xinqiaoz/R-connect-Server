@@ -60,3 +60,5 @@ for(N in 100:50000){
 }
 
 colnames(ERR_OLS)=c(100:50000)
+plot(x=100:50000,y=ERR_OLS[1,],type = 'l')
+plot(x=100:50000,y=ERR_OLS[2,],type = 'l')
