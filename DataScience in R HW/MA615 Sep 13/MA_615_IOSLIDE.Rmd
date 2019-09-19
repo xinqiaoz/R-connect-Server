@@ -1,11 +1,8 @@
 ---
-title: "MA615_sep_13"
-author: "KC"
+title: "MPG of Cars"
+author: "Kerui Cao"
 date: "9/18/2019"
-output:
-  pdf_document: default
-  html_document:
-    df_print: paged
+output: ioslides_presentation
 ---
 
 ```{r setup, include=FALSE}
@@ -15,11 +12,11 @@ library(esquisse)
 library(kableExtra)
 library(magrittr)
 library(tinytex)
-opts_chunk$set(echo = TRUE)
+opts_chunk$set(echo = FALSE)
 ```
 
-# Class assignment:
-
+# Class assignment
+## 
 Using the MPG dataset, which is available with the ggplot2 library, produce a document that includes the following elements: headers, text, tables, and plots.  
 
 Tables should include a comparison of city and highway mileage by the class of car and the best three car models for city and highway mileage for all the years in which data is available.  
@@ -27,7 +24,11 @@ Tables should include a comparison of city and highway mileage by the class of c
 Plot the data displaying as much of the data as you can. Put continuous variables on the axes and include a locally smoothed regression line to show the relationship with mileage.  Also make a box plot comparing city and highway MPG by class of car.  
 
 # Table One
-```{r echo=FALSE}
+##  
+<div class="centered">
+comparison of city and highway mileage by the class of car.
+</div>
+```{r echo=F}
 
 data(mpg)
 mpg_1=select(mpg,cty,hwy,class)
@@ -35,13 +36,19 @@ mpg_1 %<>% group_by(class)%>%
   summarise(City=mean(cty),Highway=mean(hwy))%>%
   arrange(class,City,Highway)
 mpg_1 = mpg_1[order(mpg_1$City,decreasing = TRUE),]
-knitr::kable(mpg_1,digits = 2,align = 'c',
+kable(mpg_1,digits = 2,align = 'c',format = 'html',
              col.names = c('Class','City MPG','Highway MPG'),
-             booktabs = TRUE,caption = "Average City and Highway MPG by Car Class",
-             longtable = TRUE)
+             booktabs = TRUE,
+             longtable = TRUE) %>%
+  kable_styling(bootstrap_options = c('striped','hover','condensed',"responsive"), 
+                full_width = T,position = "center",font_size = 15)
 ```
 
 # Table Two
+##  
+<div class="centered">
+the best three car models for city and highway mileage for all the years
+</div>
 ```{r echo=FALSE}
 mpg_2=select(mpg,cty,hwy,model,year)
 mpg_1999=mpg_2[which(mpg_2$year==1999),]
@@ -53,9 +60,9 @@ fi=cbind(mpg_1999[order(mpg_1999$City,decreasing = TRUE),][1:3,c(1,2)],
       mpg_2008[order(mpg_2008$City,decreasing = TRUE),][1:3,c(1,2)],
       mpg_2008[order(mpg_2008$City,decreasing = TRUE),][1:3,c(1,3)])
 kable(fi, digits = 2, align = 'c',
-      format = 'latex',booktabs=TRUE,longtable = TRUE,
-      caption = "Top 3 MPG Performing Cars: 1999, 2008") %>% 
-  kable_styling() %>%
+      format = 'html',booktabs=TRUE) %>% 
+  kable_styling(bootstrap_options = c('striped','hover','condensed',"responsive"), full_width = T,position = "left",
+                font_size = 15) %>% row_spec(0,font_size = 15) %>%
   add_header_above(c("City 1999"=2, 
                      "Highway 1999"=2,
                      "City 2008"=2,
@@ -63,7 +70,11 @@ kable(fi, digits = 2, align = 'c',
 ```
 
 # Plot One
-```{r echo=FALSE, message=FALSE, fig.height= 8}
+##  
+<div class="centered">
+Plot the data displaying as much of the data as you can. Put continuous variables on the axes and include a locally smoothed regression line to show the relationship with mileage.
+</div>
+```{r echo=FALSE, message=FALSE, fig.height= 5}
 a1=ggplot(mpg) +
  aes(x = displ, y = cty) +
  geom_point(aes(color=class),size=2) + geom_smooth() +
@@ -82,8 +93,12 @@ a2=ggplot(mpg) +
 gridExtra::grid.arrange(a1,a2,ncol=1)
 ```
 
-# Plot Two
-```{r echo=FALSE, message=FALSE, fig.height= 8}
+# Plot Two  
+## 
+<div class="centered">
+a box plot comparing city and highway MPG by class of car
+</div>
+```{r echo=FALSE, message=FALSE, fig.height= 5}
 a3=ggplot(mpg) +
  aes(x = class, y = cty) +
  geom_boxplot(fill = "#0c4c8a") +
