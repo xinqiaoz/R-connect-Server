@@ -14,7 +14,7 @@ output:
 
 ```{r setup, include=FALSE}
 pacman::p_load(ggplot2, knitr, arm, data.table,Cairo,gridExtra,tinytex)
-knitr::opts_chunk$set(echo = TRUE,dev="CairoPNG",fig.align = "center", message = FALSE,tidy = TRUE,
+knitr::opts_chunk$set(echo = TRUE,dev="CairoPNG",fig.align = "center", message = FALSE,
                       fig.width = 7, fig.height = 4, global.par = TRUE, warning = FALSE)
 par (mar=c(3,3,2,1), mgp=c(2,.7,0), tck=-.01)
 ```
@@ -64,12 +64,14 @@ Simply judge from $R^2$, which indicates the model nicely fit the data and expla
 grid.arrange(
   ggplot(data = fir_40) + geom_point(mapping = aes(x = x1,y = y)) 
   + geom_line(mapping = 
-                aes(x = x1,y = model$coefficients[1]+model$coefficients[2]*x1^2+model$coefficients[3]*x1^3,
+    aes(x = x1,y=model$coefficients[1]+
+          model$coefficients[2]*x1^2+model$coefficients[3]*x1^3,
                     colour = "The Contribution \n of X1"),size = 1)
   + geom_smooth(mapping = aes(x = x1,y = y,colour = "Smooth Fitted"))
   ,ggplot(data = fir_40) + geom_point(mapping = aes(x = x2,y = y))
   + geom_line(mapping = 
-                aes(x = x2,y = model$coefficients[1]+model$coefficients[4]*x2+model$coefficients[5]*x2^2,
+    aes(x = x2,y = model$coefficients[1]+
+          model$coefficients[4]*x2+model$coefficients[5]*x2^2,
                     colour = "The Contribution \n of X2"),size = 1)
   + geom_smooth(mapping = aes(x = x2,y = y, colour = "Smooth Fitted"))
   ,ncol = 1
@@ -149,7 +151,8 @@ da = cbind(beauty.data$tenured,beauty.data$btystdave,beauty.data$minority,beauty
            beauty.data$courseevaluation,beauty.data$female,beauty.data$formal,beauty.data$lower)
 colnames(da) = c("tenured","Beauty Rate","minority","age","evaluation","female","formal","lower")
 kable(cor(da),digits = 3, align = "c")
-```
+```  
+  
 This is the Correlation of chosen variables
 ```{r}
 cor = reshape2::melt(cor(da))
@@ -180,7 +183,8 @@ grid.arrange(
 We can tell that course evaluation does not significantly differ when we consider tenure, so we can exclude these two variables.  
 Also we can tell that the effect that beauty rate has on course evaluation may not be linear, so we may add higher order of beauty rate.
 ```{r}
-m = lm(evaluation ~ I(Beauty_Rate^2)+I(Beauty_Rate^3)+I(female*Beauty_Rate)+female,data = data.frame(dad))
+m = lm(evaluation ~ I(Beauty_Rate^2)+I(Beauty_Rate^3)+
+         I(female*Beauty_Rate)+female,data = data.frame(dad))
 summary(m)
 ```
 Compare to simply regress course evaluation on beauty rates, new model with more predictors are slightly better in explaining the variance of course evaluation. Coefficient explaination:
@@ -207,14 +211,14 @@ Note: This is more like a demo to show you that you can get statistically signif
 
 1. First generate 1000 data points from a normal distribution with mean 0 and standard deviation 1 by typing in R. Generate another variable in the same way (call it var2).
 
-```{r, eval=FALSE}
+```{r}
 var1 <- rnorm(1000,0,1)
 var2 <- rnorm(1000,0,1)
 ```
 
 Run a regression of one variable on the other. Is the slope coefficient statistically significant? [absolute value of the z-score(the estimated coefficient of var1 divided by its standard error) exceeds 2]
 
-```{r, eval=FALSE}
+```{r}
 fit  <- lm (var2 ~ var1)
 z.scores <- coef(fit)[2]/se.coef(fit)[2]
 z.scores
@@ -222,7 +226,7 @@ z.scores
 
 2. Now run a simulation repeating this process 100 times. This can be done using a loop. From each simulation, save the z-score (the estimated coefficient of var1 divided by its standard error). If the absolute value of the z-score exceeds 2, the estimate is statistically significant. Here is code to perform the simulation:
 
-```{r, eval=FALSE}
+```{r}
 z.scores <- rep (NA, 100) 
 for (k in 1:100) {
   var1 <- rnorm (1000,0,1)
@@ -291,16 +295,16 @@ Prove that the least-squares fit in simple-regression analysis has the following
 1. $\sum \hat{y}_i\hat{e}_i =0$  
 $\sum \hat{y}_i\hat{e}_i = \hat{Y} \cdot \hat{e}$, according the model and assumptions, $\hat{Y}$ is independent to e, which means $\hat{Y}$ is orthorgonal to y, so the inner product should be zero. Also $\hat{e}=(I-P)Y$,where I is identity matrix and P is projection matrix, so $\hat{y} \cdot \hat{e}=YP(I-P)Y=Y(P-PP)Y=Y(P-P)Y=0$
 
-2. $\sum (y_i-\hat{y}_i)(\hat{y}_i-\bar{y}) =\sum \hat{e}_i (\hat{y}_i-\bar{y})=0$
+2. $\sum (y_i-\hat{y}_i)(\hat{y}_i-\bar{y}) =\sum \hat{e}_i (\hat{y}_i-\bar{y})=0$  
 $\sum (y_i-\hat{y}_i)(\hat{y}_i-\bar{y}) =\sum \hat{e}_i (\hat{y}_i-\bar{y})=\sum(\hat{e_i}\hat{y_i}-\hat{e_i\bar{y}})$, for$\sum\hat{e_i}\hat{y_i}=0$, for$\sum\hat{e_i}\bar{y_i}=\bar{y_i}\sum\hat{e_i}=0$, so $\sum (y_i-\hat{y}_i)(\hat{y}_i-\bar{y})=0$
 
 Suppose that the means and standard deviations of $\mat{y}$ and  $\mat{x}$ are the same:  $\bar{{y}}=\bar{{x}}$ and $sd({y})=sd({x})$.
 
 1. Show that, under these circumstances 
 $$\beta_{y|x}=\beta_{x|y}=r_{xy}$$  
-$\beta_{y|x}=\frac{cov(y,x)}{sd(x)sd(x)}$,because $sd(y)=sd(x)=\sigma$, so $\beta_{y|x}=\frac{cov(y,x)}{sd(x)sd(x)}=\frac{cov(x,y)}{\sigma^2}=\beta_{x|y}=\rho_{xy}$
 where $\beta_{y|x}$ is the least-squares slope for the simple regression of $\mat{y}$ on $\mat{x}$, $\beta_{x|y}$ is the least-squares slope for the simple regression of $\mat{x}$ on $\mat{y}$, and $r_{xy}$ is the correlation between the two variables. Show that the intercepts are also the same, $\alpha_{y|x}=\alpha_{x|y}$.  
-because in simple linear regression, the intercept 
+$\beta_{y|x}=\frac{cov(y,x)}{sd(x)sd(x)}$,because $sd(y)=sd(x)=\sigma$, so $\beta_{y|x}=\frac{cov(y,x)}{sd(x)sd(x)}=\frac{cov(x,y)}{\sigma^2}=\beta_{x|y}=\rho_{xy}$  
+because in simple linear regression, the intercept is the average of the left-hand side of the regression equation when hole the predectors equals to 0, so for here the intercepts equal to the average of X and Y, and $\bar{X}=\bar{Y}$, so the intercepts equal.
 
 2. Why, if $\alpha_{y|x}=\alpha_{x|y}$ and $\beta_{y|x}=\beta_{x|y}$, is the least squares line for the regression of $\mat{y}$  on $\mat{x}$ different from the line for the regression of $\mat{x}$ on $\mat{y}$ (when $r_{xy}<1$)?  
 When regress Y on x, we have $Y=\alpha_{Y|X}+\beta_{Y|X}\cdot X$  

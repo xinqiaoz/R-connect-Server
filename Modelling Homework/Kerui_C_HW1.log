@@ -1,7 +1,7 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7140 64-bit) (preloaded format=pdflatex 2019.9.14)  16 SEP 2019 23:02
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7140 64-bit) (preloaded format=pdflatex 2019.9.14)  17 SEP 2019 01:06
 entering extended mode
-**./Modelling-HW-1_KC.tex
-(Modelling-HW-1_KC.tex
+**./Kerui_C_HW1.tex
+(Kerui_C_HW1.tex
 LaTeX2e <2018-12-01>
 ("C:\Program Files\MiKTeX 2.9\tex/latex/base\article.cls"
 Document Class: article 2018/09/03 v1.4i Standard LaTeX document class
@@ -533,8 +533,8 @@ Package: titling 2009/09/04 v2.1d maketitle typesetting
 \thanksmarkwidth=\skip53
 \thanksmargin=\skip54
 \droptitle=\skip55
-) (Modelling-HW-1_KC.aux)
-\openout1 = `Modelling-HW-1_KC.aux'.
+) (Kerui_C_HW1.aux)
+\openout1 = `Kerui_C_HW1.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 129.
 LaTeX Font Info:    ... okay on input line 129.
@@ -623,9 +623,9 @@ Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 129.
 LaTeX Info: Redefining \pageref on input line 129.
 LaTeX Info: Redefining \nameref on input line 129.
-(Modelling-HW-1_KC.out) (Modelling-HW-1_KC.out)
+(Kerui_C_HW1.out) (Kerui_C_HW1.out)
 \@outlinefile=\write4
-\openout4 = `Modelling-HW-1_KC.out'.
+\openout4 = `Kerui_C_HW1.out'.
 
 (C:\Users\Harry\AppData\Roaming\MiKTeX\2.9\tex/context/base/mkii\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -666,32 +666,32 @@ File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 ) [1
 
 {C:/Users/Harry/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-1.png, id=56, 505.89pt x 
-505.89pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-1.png Graphic file (
-type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-1.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-1
-.png  used on input line 215.
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-1.png, id=56, 505.89pt x 505.89
+pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-1.png Graphic file (type p
+ng)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-1.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-1.png  
+used on input line 215.
 (pdftex.def)             Requested size: 469.76265pt x 469.76265pt.
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-2.png, id=57, 505.89pt x 
-505.89pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-2.png Graphic file (
-type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-2.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-2
-.png  used on input line 223.
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-2.png, id=57, 505.89pt x 505.89
+pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-2.png Graphic file (type p
+ng)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-2.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-2.png  
+used on input line 223.
 (pdftex.def)             Requested size: 469.76265pt x 469.76265pt.
-[2 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-1.png>]
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-3.png, id=62, 505.89pt x 
-505.89pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-3.png Graphic file (
-type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-3.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-3
-.png  used on input line 238.
+[2 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-1.png>]
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-3.png, id=62, 505.89pt x 505.89
+pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-3.png Graphic file (type p
+ng)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-3.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-3.png  
+used on input line 238.
 (pdftex.def)             Requested size: 469.76265pt x 469.76265pt.
-[3 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-2.png>]
+[3 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-2.png>]
 LaTeX Font Info:    Try loading font information for OT1+lmr on input line 240.
 
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\ot1lmr.fd"
@@ -729,129 +729,129 @@ LaTeX Font Info:    Try loading font information for U+msb on input line 240.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) (C:\Users\Harry\AppData\Roaming\MiKTeX\2.9\tex/latex/microtype\mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
-) [4 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-2-3.png>]
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-3-1.png, id=74, 505.89pt x 
-289.08pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-3-1.png Graphic file (
-type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-3-1.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-3-1
-.png  used on input line 276.
+) [4 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-2-3.png>]
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-3-1.png, id=74, 505.89pt x 289.08
+pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-3-1.png Graphic file (type p
+ng)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-3-1.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-3-1.png  
+used on input line 276.
 (pdftex.def)             Requested size: 469.76265pt x 268.43579pt.
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-4-1.png, id=75, 505.89pt x 
-289.08pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-4-1.png Graphic file (
-type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-4-1.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-4-1
-.png  used on input line 300.
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-4-1.png, id=75, 505.89pt x 289.08
+pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-4-1.png Graphic file (type p
+ng)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-4-1.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-4-1.png  
+used on input line 300.
 (pdftex.def)             Requested size: 469.76265pt x 268.43579pt.
-[5 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-3-1.png>]
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-4-2.png, id=81, 505.89pt x 
-289.08pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-4-2.png Graphic file (
-type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-4-2.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-4-2
-.png  used on input line 308.
+[5 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-3-1.png>]
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-4-2.png, id=81, 505.89pt x 289.08
+pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-4-2.png Graphic file (type p
+ng)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-4-2.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-4-2.png  
+used on input line 308.
 (pdftex.def)             Requested size: 469.76265pt x 268.43579pt.
-[6 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-4-1.png> <./Modelling-
-HW-1_KC_files/figure-latex/unnamed-chunk-4-2.png>]
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-5-1.png, id=86, 505.89pt x 
-289.08pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-5-1.png Graphic file (
-type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-5-1.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-5-1
-.png  used on input line 342.
+[6 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-4-1.png> <./Kerui_C_HW1_file
+s/figure-latex/unnamed-chunk-4-2.png>]
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-5-1.png, id=86, 505.89pt x 289.08
+pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-5-1.png Graphic file (type p
+ng)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-5-1.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-5-1.png  
+used on input line 342.
 (pdftex.def)             Requested size: 469.76265pt x 268.43579pt.
 LaTeX Font Info:    Try loading font information for TS1+lmr on input line 359.
 
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\ts1lmr.fd"
 File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
-) [7 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-5-1.png>]
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-7-1.png, id=101, 505.89pt x
- 289.08pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-7-1.png Graphic file (
-type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-7-1.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-7-1
-.png  used on input line 429.
+) [7 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-5-1.png>]
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-7-1.png, id=101, 505.89pt x 289.0
+8pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-7-1.png Graphic file (type p
+ng)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-7-1.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-7-1.png  
+used on input line 429.
 (pdftex.def)             Requested size: 469.76265pt x 268.43579pt.
-[8 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-7-1.png>]
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-9-1.png, id=107, 505.89pt x
- 289.08pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-9-1.png Graphic file (
-type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-9-1.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-9-1
-.png  used on input line 476.
+[8 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-7-1.png>]
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-9-1.png, id=107, 505.89pt x 289.0
+8pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-9-1.png Graphic file (type p
+ng)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-9-1.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-9-1.png  
+used on input line 476.
 (pdftex.def)             Requested size: 469.76265pt x 268.43579pt.
-[9 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-9-1.png>]
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-11-1.png, id=114, 505.89pt 
-x 289.08pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-11-1.png Graphic file 
-(type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-11-1.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-11-
-1.png  used on input line 534.
+[9 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-9-1.png>]
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-11-1.png, id=114, 505.89pt x 289.
+08pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-11-1.png Graphic file (type 
+png)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-11-1.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-11-1.png 
+ used on input line 534.
 (pdftex.def)             Requested size: 469.76265pt x 268.43579pt.
-[10 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-11-1.png>]
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-12-1.png, id=119, 505.89pt 
-x 289.08pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-12-1.png Graphic file 
-(type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-12-1.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-12-
-1.png  used on input line 561.
+[10 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-11-1.png>]
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-12-1.png, id=119, 505.89pt x 289.
+08pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-12-1.png Graphic file (type 
+png)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-12-1.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-12-1.png 
+ used on input line 561.
 (pdftex.def)             Requested size: 469.76265pt x 268.43579pt.
-[11 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-12-1.png>]
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-14-1.png, id=124, 505.89pt 
-x 289.08pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-14-1.png Graphic file 
-(type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-14-1.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-14-
-1.png  used on input line 623.
+[11 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-12-1.png>]
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-14-1.png, id=124, 505.89pt x 289.
+08pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-14-1.png Graphic file (type 
+png)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-14-1.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-14-1.png 
+ used on input line 623.
 (pdftex.def)             Requested size: 469.76265pt x 268.43579pt.
-<Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-14-2.png, id=125, 505.89pt 
-x 289.08pt>
-File: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-14-2.png Graphic file 
-(type png)
-<use Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-14-2.png>
-Package pdftex.def Info: Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-14-
-2.png  used on input line 631.
+<Kerui_C_HW1_files/figure-latex/unnamed-chunk-14-2.png, id=125, 505.89pt x 289.
+08pt>
+File: Kerui_C_HW1_files/figure-latex/unnamed-chunk-14-2.png Graphic file (type 
+png)
+<use Kerui_C_HW1_files/figure-latex/unnamed-chunk-14-2.png>
+Package pdftex.def Info: Kerui_C_HW1_files/figure-latex/unnamed-chunk-14-2.png 
+ used on input line 631.
 (pdftex.def)             Requested size: 469.76265pt x 268.43579pt.
-[12 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-14-1.png>]
+[12 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-14-1.png>]
 
 Package hyperref Warning: Difference (2) between bookmark levels is greater 
 (hyperref)                than one, level fixed on input line 645.
 
-[13 <./Modelling-HW-1_KC_files/figure-latex/unnamed-chunk-14-2.png>] [14]
+[13 <./Kerui_C_HW1_files/figure-latex/unnamed-chunk-14-2.png>] [14]
 
 Package amsmath Warning: Foreign command \over;
 (amsmath)                \frac or \genfrac should be used instead
 (amsmath)                 on input line 875.
 
 [15]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 958.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 961.
 [16]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 958.
-(Modelling-HW-1_KC.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 958.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 958.
-Package rerunfilecheck Info: File `Modelling-HW-1_KC.out' has not changed.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 961.
+(Kerui_C_HW1.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 961.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 961.
+Package rerunfilecheck Info: File `Kerui_C_HW1.out' has not changed.
 (rerunfilecheck)             Checksum: 99315F7F001C65CFCAC232434965ECA1;1300.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 958.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 961.
  ) 
 Here is how much of TeX's memory you used:
- 13215 strings out of 492895
- 195367 string characters out of 3133479
- 308404 words of memory out of 3000000
+ 13219 strings out of 492895
+ 195011 string characters out of 3133479
+ 308386 words of memory out of 3000000
  16808 multiletter control sequences out of 15000+200000
- 57023 words of font info for 87 fonts, out of 3000000 for 9000
+ 57189 words of font info for 89 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 32i,6n,38p,982b,455s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 32i,6n,38p,976b,455s stack positions out of 5000i,500n,10000p,200000b,50000s
 {C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathsy.enc}{C:/Program Fil
 es/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathit.enc}{C:/Program Files/MiKTeX 2.9/fon
 ts/enc/dvips/lm/lm-mathex.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/l
@@ -870,7 +870,7 @@ ogram Files/MiKTeX 2.9/fonts/type1/public/lm/lmsy10.pfb><C:/Program Files/MiKTe
 X 2.9/fonts/type1/public/lm/lmsy5.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/
 public/lm/lmsy7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmtk10.p
 fb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmtt10.pfb>
-Output written on Modelling-HW-1_KC.pdf (16 pages, 587598 bytes).
+Output written on Kerui_C_HW1.pdf (16 pages, 587705 bytes).
 PDF statistics:
  255 PDF objects out of 1000 (max. 8388607)
  61 named destinations out of 1000 (max. 500000)
