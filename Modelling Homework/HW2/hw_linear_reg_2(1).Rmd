@@ -22,7 +22,7 @@ pacman::p_load("arm",
                "kableExtra")
 opts_chunk$set(echo = F,dev="CairoPNG",fig.align = "center", 
                       fig.width = 5.656, fig.height = 4, global.par = TRUE,
-               warning = FALSE, message=FALSE)
+               warning = FALSE, message=FALSE,dpi = 346)
 par (mar=c(3,3,2,1), mgp=c(2,.7,0), tck=-.01)
 ```
 
@@ -42,9 +42,10 @@ gelman_dir <- "http://www.stat.columbia.edu/~gelman/arm/examples/"
 heights    <- read.dta (paste0(gelman_dir,"earnings/heights.dta"),warn.missing.labels = T)
 ```
 
-Pull out the data on earnings, sex, height, and weight.
-1. In R, check the dataset and clean any unusually coded data.
-```{r echo=FALSE, fig.height=3.3,dpi=200}
+Pull out the data on earnings, sex, height, and weight.  
+
+#### 1.In R, check the dataset and clean any unusually coded data.
+```{r echo=FALSE, fig.height=3.3}
 info=NULL
 for(i in 1:length(names(heights))){
   num_of_uniquevalue=length(unique(heights[,i]))
@@ -56,13 +57,15 @@ for(i in 1:length(names(heights))){
 rownames(info)=c('Number of Unique Value','Number of Missing Value','Number of 0','% of Missing Value')
 colnames(info)=names(heights)
 kable(info,caption = "Quality of Data",align = "c",digits = 2,
-      format = 'latex',booktabs=T,longtable=T)
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(font_size = 8,bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
 matrixplot(heights)
 ```
 \qquad Above chart and figure show the distribution of missing value amoung variables, in the figure, the red means there is a missing value, and for the rest, the darker the color, the higher the value.  
 
 \qquad So according to the analysis above, the most of the missing value ,which is represented by 'NA' and '0', contained in variable "earning", about $41\%$ of data doesn`t have variable 'earning', which is reasonable, beacause earning is kond of a private quetion, due to the extent of missing, we can hardly apply any imputaion, so simply delete it.  
-```{r fig.height=3.3,dpi=200}
+```{r fig.height=3.3}
 for(i in 1:length(names(heights))){
   heights[which(heights[,i]==0),i]=NaN
 }
@@ -78,11 +81,14 @@ for(i in 1:length(names(hi))){
 rownames(info)=c('Number of Unique Value','Number of Missing Value','Number of 0','% of Missing Value')
 colnames(info)=names(hi)
 kable(info,caption = "Quality of Data",digits = 2,
-      align = "c",format = 'latex',booktabs=T,longtable = T)
+      align = "c",format = 'latex',booktabs=T,longtable = T) %>% 
+  kable_styling(font_size = 8,bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
 matrixplot(hi)
 ```
 \qquad So now the data is clean and ready to be analysisd.  
-2. Fit a linear regression model predicting earnings from height. What transformation should you perform in order to interpret the intercept from this model
+
+#### 2.Fit a linear regression model predicting earnings from height. What transformation should you perform in order to interpret the intercept from this model
 as average earnings for people with average height?  
 
 \qquad Look at the data, we can find three variables that related to height, "height 1", "height 2" and "height", after reading the original article, we know that real height should be "hight 1" feet and "height 2" inches, so $Real Height=12*height_1+height_2$, which is exactly the variable "height".  
@@ -101,24 +107,49 @@ gridExtra::grid.arrange(pnl,pl,ncol=2)
 ```
 \qquad From above plot, we can tell that replacing earn by $\log_{10}Earn$ does comdence the data and alleviate the effect of outliers a bit. Than apply regression analysis.  
 ```{r}
-mo = lm(log(earn,10)~h_over_m+I(exp(h_over_m)),data = hi)
+mo = lm(log(earn,10)~h_over_m+I(h_over_m^2)+I(h_over_m^3),data = hi)
 summary(mo)
-ggplot()+geom_point(aes(y=mo$residuals,x=mo$fitted.values))
 car::qqPlot(mo$residuals)
 ```
+\qquad From result above, we can see that the performance of the model is poor, whose residuals are not normally distributed and even not close. I tried different combination of predictors, including heighs and the power of height. The coefficience of model shows that only the coefficience of height is significant, Which means one unit increase(1 inch) will increase the earn by around $2.8\%$.  
 
-3. Fit some regression models with the goal of predicting earnings from some
-combination of sex, height, and weight. Be sure to try various transformations and interactions that might make sense. Choose your preferred model and justify.
+#### 3. Fit some regression models with the goal of predicting earnings from some combination of sex, height, and weight. Be sure to try various transformations and interactions that might make sense. Choose your preferred model and justify.  
 
+\qquad To select proper predictors, we first do some analysis.  
 ```{r}
+cor = reshape2::melt(cor(hi))
+ggplot(cor,aes(y=Var1,x=Var2,fill=value)) + 
+  geom_tile()+
+  scale_fill_gradient2(name="Value",low = "darkgreen",high = "red", mid = "white")
+```
+\qquad We can tell that sex is highly related to height, earn is related to earn, race is not obviously related to any othor variables. So we may consider put sex, ed into our model.  
 
+\qquad Before we analyze sex, we have to transform sex into a binary variable, where 0 represent male, 1 represent female.  
+```{r}
+hi$sex=hi$sex-1
 ```
 
-4. Interpret all model coefficients.
-
-```{r}
-
+```{r fig.height=6}
+aa1 = ggplot(hi,aes(y=log(earn,10),x=h_over_m,color = as.factor(sex))) + geom_point() + geom_smooth(method = 'lm')
+aa2 = ggplot(hi,aes(y=log(earn,10),x = as.factor(sex))) + geom_boxplot()
+gridExtra::grid.arrange(aa1,aa2,ncol=1)
 ```
+\qquad For sex, we can reasonablly guess that sex does affect the average of earning and the way height affecting earn.  
+```{r}
+ggplot(hi,aes(y=log(earn,10),x=ed,color = as.factor(sex))) + geom_point() + geom_smooth()
+```
+\qquad We can tell the eduacation level is related to earn, rough judge from above figure, we can tell that higher education level, higher earning, and sex has no obvious effect on the slope of education level.  
+```{r fig.height=3.8}
+mu = lm(log(earn,10)~h_over_m+sex+I(log(ed))+sex:h_over_m+ed:sex,data = hi)
+summary(mu)
+ggplot()+geom_histogram(aes(x=mu$residuals))
+car::qqPlot(mu$residuals, envelope = 0.99,grid=F)
+```
+\qquad After adding new variables to our model, $R^2$ increased a little, but the residuals of model is still not normally distributed.  
+
+#### 4. Interpret all model coefficients.
+
+\qquad 
 
 5. Construct 95% confidence interval for all model coefficients and discuss what they mean.
 
