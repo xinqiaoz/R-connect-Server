@@ -57,17 +57,21 @@ summary(mo2)
 ```
 
 2. Make a graph similar to Figure 5.9 of the Gelman and Hill displaying Pr(switch) as a function of distance to nearest safe well, along with the data.
-```{r}
+```{r dpi=500}
 reda = data.frame(cbind(mo2$fitted.values,mo2$model))
-ggplot(data = reda,aes())
+predfun<- function(x){ 
+  invlogit (cbind (1,mean(reda$arsenic),mean(reda$I.arsenic.2.),x,x^2,mean(reda$educ),mean(reda$assoc) ) %*% coef(mo2))
+  }
+ggplot(reda)+aes(x=lg_dis,y=switch,colour=factor(switch)) + geom_jitter(height = 0.1) + stat_function(fun = predfun)
 ```
 
 3. Make a residual plot and binned residual plot as in Figure 5.13.
-```{r}
-predfun<- function(x){ 
-  invlogit (cbind (1,mean(reda$arsenic),mean(reda$`I(arsenic^2)`),x,x^2,mean(reda $educ),mean(reda$assoc) ) %*% coef(mo2))
-  }
-ggplot(reda)+aes(x=lg_dis,y=switch,colour=factor(switch)) + geom_jitter(height = 0.1) + stat_function(fun = predfun)
+```{r dpi=500, fig.height=3.7}
+red = data.frame(cbind(mo2$residuals,mo2$fitted.values))
+colnames(red) = c('residuals','fitted.values')
+ggplot(red) + geom_point(aes(y = residuals, x = fitted.values))
+binnedplot(fitted(mo2),resid(mo2,type="response"))
+
 ```
 
 4. Compute the error rate of the fitted model and compare to the error rate of the null model.
@@ -75,12 +79,141 @@ ggplot(reda)+aes(x=lg_dis,y=switch,colour=factor(switch)) + geom_jitter(height =
 ```{r}
 glm.prob = predict(mo2,type = 'response')
 glm.pred=ifelse(glm.prob>0.5,"Yes","No")
-table(glm.pred,dat$switch)
-
+er = table(glm.pred,dat$switch)
+kable(er,caption = "Error Table",align = "c",digits = 3,
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
 ```
 
 5. Create indicator variables corresponding to `dist < 100`, `100 =< dist < 200`, and `dist > 200`. Fit a logistic regression for Pr(switch) using these indicators. With this new model, repeat the computations and graphs for part (1) of this exercise.
 
-```{r}
-
+```{r dpi=500}
+dat$dist_c[dat$dist<100]=0
+dat$dist_c[dat$dist>=100 & dat$dist <200]=1
+dat$dist_c[dat$dist>=200]=2
+disc = dat %>% group_by(dist_c) %>% summarise(prob = sum(switch)/length(switch))
+colnames(disc) = c('DIST_Categorical','Probability')
+ggplot(data = data.frame(disc)) + geom_point(aes(y = Probability, x = DIST_Categorical),size = 10) + xlab("DIST_Categorical") + ylab("Probability of Switch")
 ```
+
+```{r}
+mo3 = glm(data = dat, switch ~ arsenic+ I(arsenic^2) + dist_c + educ + assoc, family = binomial(link = "logit"))
+summary(mo3)
+```
+```{r dpi=500}
+reda2 = data.frame(cbind(mo3$fitted.values,mo3$model))
+predfun<- function(x){ 
+  invlogit (cbind (1,mean(reda$arsenic),mean(reda$I.arsenic.2.),x,mean(reda$educ),mean(reda$assoc) ) %*% coef(mo3))
+  }
+ggplot(reda2)+aes(x=dist_c,y=switch,colour=factor(switch)) + geom_jitter(height = 0.1) + stat_function(fun = predfun)
+```
+```{r dpi=500}
+red2 = data.frame(cbind(mo3$residuals,mo3$fitted.values))
+colnames(red2) = c('residuals','fitted.values')
+ggplot(red2) + geom_point(aes(y = residuals, x = fitted.values))
+binnedplot(fitted(mo3),resid(mo3,type="response"))
+```
+```{r}
+glm.prob2 = predict(mo3,type = 'response')
+glm.pred2=ifelse(glm.prob2>0.5,"Yes","No")
+er2 = table(glm.pred2,dat$switch)
+kable(er2,caption = "Error Table",align = "c",digits = 3,
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
+```
+
+### Model building and comparison: 
+
+continue with the well-switching data described in the previous exercise.
+
+1. Fit a logistic regression for the probability of switching using, as predictors, distance, `log(arsenic)`, and their interaction. Interpret the estimated coefficients and their standard errors.
+
+\qquad Because we need to consider the interaction between distance and arsenic, it is not recommended to interact two continuous variables, so we use the categorical version of distance we generated in previous question. Actually here if we simply add dist_c into the model, it is not a proper way adding categorical data, we shouold choose dist_c = 0 as reference, then add two dummy variables representing dist_c =1 and 2, but for simplicity, we just do so.   
+
+```{r}
+mo4 = glm(data = dat, switch~dist_c+log(arsenic)+dist:log(arsenic),family = binomial(link = 'logit'))
+summary(mo4)
+```
+
+2. Make graphs as in Figure 5.12 to show the relation between probability of switching, distance, and arsenic level.
+
+```{r dpi=500}
+reda3 = data.frame(cbind(mo4$fitted.values,mo4$model))
+predfun0<- function(x){ 
+  invlogit (cbind (1,0,x,0*x) %*% coef(mo4))
+}
+predfun1<- function(x){ 
+  invlogit (cbind (1,1,x,1*x) %*% coef(mo4))
+}
+predfun2<- function(x){ 
+  invlogit (cbind (1,2,x,2*x) %*% coef(mo4))
+}
+
+ggplot(dat)+aes(x=arsenic,y=switch,colour=factor(switch)) + geom_jitter(height = 0.1) + stat_function(fun = predfun0,aes(color = 'dis_c=0'),size =1.5) + stat_function(fun = predfun1,aes(color = 'dis_c=1'),size =1.5)+ stat_function(fun = predfun2,aes(color = 'dis_c=2'),size =1.5)
+```
+3. Following the procedure described in Section 5.7, compute the average predictive differences corresponding to:
+i. A comparison of dist = 0 to dist = 100, with arsenic held constant. 
+ii. A comparison of dist = 100 to dist = 200, with arsenic held constant.
+iii. A comparison of arsenic = 0.5 to arsenic = 1.0, with dist held constant. 
+iv. A comparison of arsenic = 1.0 to arsenic = 2.0, with dist held constant.
+Discuss these results.
+
+\qquad Comparison of dist = 0 to dist = 100, with arsenic held constant.  
+
+```{r echo=T}
+hi = 1
+low = 0
+b = mo4$coefficients
+hi_p = invlogit(b[1] + b[2]*hi + b[3]* mo4$model$`log(arsenic)` +
+                  b[4]*mo4$model$`log(arsenic)`*hi)
+low_p = invlogit(b[1] + b[2]*low + b[3]* mo4$model$`log(arsenic)` +
+                   b[4]*mo4$model$`log(arsenic)`*low)
+mean(hi_p - low_p)
+```
+
+\qquad Comparison of dist = 100 to dist = 200, with arsenic held constant.  
+
+```{r echo=T}
+hi = 2
+low = 1
+b = mo4$coefficients
+hi_p = invlogit(b[1] + b[2]*hi + b[3]* mo4$model$`log(arsenic)` +
+                  b[4]*mo4$model$`log(arsenic)`*hi)
+low_p = invlogit(b[1] + b[2]*low + b[3]* mo4$model$`log(arsenic)` +
+                   b[4]*mo4$model$`log(arsenic)`*low)
+mean(hi_p - low_p)
+```
+
+\qquad Comparison of arsenic = 0.5 to arsenic = 1.0, with dist held constant.  
+
+```{r echo=T}
+hi = 1
+low = 0.5
+b = mo4$coefficients
+hi_p = invlogit(b[1] + b[2]*mo4$model$dist_c + b[3]*hi + b[4]*hi*mo4$model$dist_c)
+low_p = invlogit(b[1] + b[2]*mo4$model$dist_c + b[3]*low + b[4]*low*mo4$model$dist_c)
+mean(hi_p - low_p)
+```
+
+\qquad Comparison of arsenic = 1.0 to arsenic = 2.0, with dist held constant.  
+
+```{r echo=T}
+hi = 2
+low = 1
+b = mo4$coefficients
+hi_p = invlogit(b[1] + b[2]*mo4$model$dist_c + b[3]*hi + b[4]*hi*mo4$model$dist_c)
+low_p = invlogit(b[1] + b[2]*mo4$model$dist_c + b[3]*low + b[4]*low*mo4$model$dist_c)
+mean(hi_p - low_p)
+```
+
+\qquad So according to the result above, we can conclude that:  
+
+\qquad On average, households which are 100 meter or farther from the nearest safe well are 14.5% less likely to switch, compared to households that are 100 meter or closer from the nearest safe well, at the same arsenic level.  
+
+\qquad On average, households which are 200 meter farther from the nearest safe well are 14.0% less likely to switch, compared to households that are 200 meter or closer from the nearest safe well, at the same arsenic level.  
+
+\qquad On average, households whose arsenic level are 1 are 10.7% more likely to switch, compared to households whose arsenic level are 0.5, at the same distant level.  
+
+\qquad On average, households whose arsenic level are 2 are 14.0% more likely to switch, compared to households whose arsenic level are 1, at the same distant level. 

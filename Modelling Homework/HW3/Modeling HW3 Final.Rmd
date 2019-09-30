@@ -1,0 +1,430 @@
+---
+title: "Modeling HW3"
+author: "Kerui Cao"
+date: "9/30/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,dev="CairoPNG",fig.align = "center", 
+                      fig.width = 5.656, fig.height = 4, global.par = TRUE,warning = F)
+#install.packages("pacman",repos="https://cloud.r-project.org")
+pacman::p_load("tidyverse","knitr","arm","foreign","car","Cairo","kableExtra")
+par (mar=c(3,3,2,1), mgp=c(2,.7,0), tck=-.01)
+```
+
+# Data analysis 
+
+### 1992 presidential election
+
+#### The folder `nes` contains the survey data of presidential preference and income for the 1992 election analyzed in Section 5.1, along with other variables including sex, ethnicity, education, party identification, and political ideology.
+
+```{r, echo=FALSE}
+nes5200<-read.dta("http://www.stat.columbia.edu/~gelman/arm/examples/nes/nes5200_processed_voters_realideo.dta")
+#saveRDS(nes5200,"nes5200.rds")
+#nes5200<-readRDS("nes5200.rds")
+```
+```{r}
+nes5200_dt <- data.table::data.table(nes5200)
+  yr <- 1992
+nes5200_dt_s<-nes5200_dt[ year==yr & presvote %in% c("1. democrat","2. republican")& !is.na(income)]
+nes5200_dt_s<-nes5200_dt_s[,vote_rep:=1*(presvote=="2. republican")]
+nes5200_dt_s$income <- droplevels(nes5200_dt_s$income)
+```
+
+#### 1.  Fit a logistic regression predicting support for Bush given all these inputs. Consider how to include these as regression predictors and also consider possible interactions.
+
+\qquad Before dive into analysis, we have to reorganize and clean the data, for example we can notice that there are a lot missing values,we have to delete them or impute them.  
+
+```{r}
+info=NULL
+nes5200_dt_s=data.frame(nes5200_dt_s)
+for(i in 1:length(names(nes5200_dt_s))){
+  num_of_uniquevalue=length(unique(nes5200_dt_s[,i]))
+  Na = sum(is.na(nes5200_dt_s[,i]))
+  P_na = (Na)/length(nes5200_dt_s[,i])
+  info = cbind(info,matrix(c(num_of_uniquevalue,Na,P_na),ncol = 1))
+}
+rownames(info)=c('Number of Unique Value','Number of Missing Value','% of Missing Value')
+colnames(info)=names(nes5200_dt_s)
+info = info[,order(info[3,],decreasing = T)]
+kable(info[,1:5],caption = "Most Missing Value Variables",align = "c",digits = 3,
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(font_size = 8,bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
+kable(info[,59:63],caption = "Least Missing Value Variables",align = "c",digits = 3,
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(font_size = 8,bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
+info = info[,order(info[1,])]
+kable(info[,1:5],caption = "Least Unique Value Variables",align = "c",digits = 3,
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(font_size = 8,bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
+```
+
+\qquad According to the table above, we can see that for some variables, they are all missing values, and for some variables, they have only one value, for now we will delete all of these kind of variables, as for variables that is partly missing, we will deal with them later after predictors being decided.  
+
+```{r}
+da = nes5200_dt_s
+delete = which(apply(da,2,function(x){x%>%unique%>%length})==1)
+da = da[,-1*delete]
+da = na.omit(da)
+```
+
+\qquad Take a look at the data, there are many categoriacal variables, so we have to transform them into numeric data.  
+
+```{r}
+da = separate(da,gender,c('gender'),convert = T)
+da$gender = da$gender - 1
+da = separate(da,race,c('race'),convert = T)
+da = separate(da,educ1,c('r_education'),convert = T)
+da = separate(da,urban,c('urban'),convert = T)
+da = separate(da,region,c('region'),convert = T)
+da = separate(da,income,c('income_level'),convert = T)
+da = separate(da,occup1,c('r_occup'),convert = T)
+da = separate(da,religion,c('religion'),convert = T)
+da = separate(da,educ2,c('f_educ'),convert = T)
+da = separate(da,educ3,c('m_educ'),convert = T)
+da = separate(da,martial_status,c('martial'),convert = T)
+da = separate(da,partyid7,c('par_id_7'),convert = T)
+da = separate(da,partyid3_b,c('par_id_3'),convert = T)
+da = separate(da,father_party,c('father_party'),convert = T)
+da = separate(da,mother_party,c('mother_party'),convert = T)
+da = separate(da,presvote,c('pre_vote'),convert = T)
+da$pre_vote = da$pre_vote-1
+```
+
+\qquad As for the dependent variablel, there is no variable in data that shows the final vote for each respondents, so we can only use the result for prevote as the estimate of final vote result. and according to the formation of data set nes5200_dt_s, the value of presvote can only be "democrat" or "republican", 1 represents democrat, 2 represents republicans, in order to construct logistic regression, we substract prevotes by 1, so here 0 represents democrat, 1 represents republicans. 
+
+\qquad After the precess above, we can begin to analyze the data, first we plot some intersted variables against the dependant variable:  
+
+```{r , dpi= 500}
+ge = da[,c('pre_vote','gender')]
+ge %<>% group_by(gender) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+ge= cbind(ge,"gender")
+# ge = rbind(ge,"",'','','')
+ra = da[,c('pre_vote','race')]
+ra %<>% group_by(race) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+ra= cbind(ra,"race")
+#ra = rbind(ra,"")
+ed = da[,c('pre_vote','r_education')]
+ed %<>% group_by(r_education) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+ed= cbind(ed,"education")
+#ed = rbind(ed,"",'')
+ur = da[,c('pre_vote','urban')]
+ur %<>% group_by(urban) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+ur= cbind(ur,"urban")
+#ur = rbind(ur,"",'','')
+re = da[,c('pre_vote','region')]
+re %<>% group_by(region) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+re= cbind(re,"region")
+#re = rbind(re,"",'')
+ic = da[,c('pre_vote','income_level')]
+ic %<>% group_by(income_level) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+ic= cbind(ic,"income")
+#ic = rbind(ic,"")
+oc = da[,c('pre_vote','r_occup')]
+oc %<>% group_by(r_occup) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+oc= cbind(oc,"occupation")
+rl = da[,c('pre_vote','religion')]
+rl %<>% group_by(religion) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+rl= cbind(rl,"religion")
+#rl = rbind(rl,"",'')
+colnames(ge) = c('Code','Portion',"variables")
+colnames(ra) = c('Code','Portion',"variables")
+colnames(ed) = c('Code','Portion',"variables")
+colnames(ur) = c('Code','Portion',"variables")
+colnames(re) = c('Code','Portion',"variables")
+colnames(ic) = c('Code','Portion',"variables")
+colnames(oc) = c('Code','Portion',"variables")
+colnames(rl) = c('Code','Portion',"variables")
+# # rrr = rbind(re,ic,oc,rl)
+# # rrrr = rbind(ge,ra,ed,ur)
+rr= rbind(ge,ra,ed,ur,re,ic,oc,rl)
+# kable(rrr,caption = "portion of voting republican",align = "c",digits = 2,
+#       format = 'latex',booktabs=T,longtable=T) %>%
+#   kable_styling(bootstrap_options =
+#                   c('striped','hover','condensed',"responsive"),latex_options = 'hold_position')
+# kable(rrrr,caption = "portion of voting republican",align = "c",digits = 2,
+#       format = 'latex',booktabs=T,longtable=T) %>%
+#   kable_styling(bootstrap_options =
+#                   c('striped','hover','condensed',"responsive"),latex_options = 'hold_position')
+ggplot(rr) +
+ aes(x = Code, y = Portion) +
+ geom_line(size = 1L, colour = "#0c4c8a") +
+ theme_minimal() +
+ facet_wrap(vars(variables), scales = "free_x") +xlab('Variables') + ylab('Probability of voting Republican')
+```
+
+\qquad We can see that the probability of voting Republican varies a lot for each variables we choose. Now we can construct logistic regression, as for transformation of variables, because most of the input variables are categorical variables, so it is not helpful to transform categorical variables, so does interaction between categorical.  
+
+```{r}
+mo1 = glm(data = da, pre_vote ~ age+gender+factor(race)+factor(r_education)+factor(urban)+factor(region)+factor(income_level)+factor(r_occup)+factor(religion)+factor(martial)+factor(par_id_3)+factor(father_party)+factor(mother_party),family = binomial(link = 'logit'))
+summary(mo1)
+```
+
+## 2. Evaluate and compare the different models you have fit. Consider coefficient estimates and standard errors, residual plots, and deviances.
+
+```{r dpi=500}
+binnedplot(fitted(mo1),resid(mo1,type="response"))
+```
+
+3. For your chosen model, discuss and compare the importance of each input variable in the prediction.
+
+\qquad For the result of regression, we can see that race and party identity are important to their voting behavior.
+
+### Graphing logistic regressions: 
+
+the well-switching data described in Section 5.4 of the Gelman and Hill are in the folder `arsenic`.  
+
+```{r, echo=FALSE}
+wells_dt <- data.frame(read.table("http://www.stat.columbia.edu/~gelman/arm/examples/arsenic/wells.dat", header=TRUE))
+```
+
+#### 1. Fit a logistic regression for the probability of switching using log (distance to nearest safe well) as a predictor.
+
+\qquad Since we know nothing about the real meaning of these variables, we can only try to use information criteria as model selection standard.  
+
+```{r}
+dat = wells_dt
+dat = mutate(dat,lg_dis = log(dist))
+```
+
+```{r dpi=500}
+diss = dat %>% group_by(as.factor(x = round(dat$lg_dis,digits = 1))) %>% summarise(prob = sum(switch)/length(switch))
+colnames(diss) = c('Log_Dis','Probability')
+di = ggplot(data = data.frame(diss),aes(y = Probability, x = Log_Dis)) + geom_point() + xlab("Log Distance") + ylab("Probability of Switch") + scale_x_discrete(breaks = seq(-0.9,5.8,0.7))
+
+edu = dat %>% group_by(educ) %>% summarise(prob = sum(switch)/length(switch))
+colnames(diss) = c('Edu','Probability')
+ed = ggplot(data = data.frame(edu),aes(y = prob,x = educ)) + geom_point()
+
+ars = dat %>% group_by(as.factor(x = round(dat$arsenic,digits = 1))) %>% summarise(prob = sum(switch)/length(switch))
+colnames(ars) = c('Arsenic','Probability')
+ar = ggplot(data = data.frame(ars),aes(y = Probability, x = Arsenic)) + geom_point()+ xlab("Arsenic") + ylab("Probability of Switch") + scale_x_discrete(breaks = seq(0.5,9.7,1))
+
+ass = dat %>% group_by(assoc) %>% summarise(prob = sum(switch)/length(switch))
+colnames(ass) = c('Assoc','Probability')
+as = ggplot(data = data.frame(ass)) + geom_point(aes(y = Probability, x = Assoc),size = 10) + xlab("Assoc") + ylab("Probability of Switch") 
+
+gridExtra::grid.arrange(di,ed,ar,as,ncol=2)
+```
+
+\qquad Based on the figures above, we consider the following model:  
+
+```{r}
+mo2 = glm(data = dat, switch ~ arsenic+ I(arsenic^2) + lg_dis + I(lg_dis^2) + educ + assoc, family = binomial(link = "logit"))
+summary(mo2)
+```
+
+2. Make a graph similar to Figure 5.9 of the Gelman and Hill displaying Pr(switch) as a function of distance to nearest safe well, along with the data.
+```{r dpi=500}
+reda = data.frame(cbind(mo2$fitted.values,mo2$model))
+predfun<- function(x){ 
+  invlogit (cbind (1,mean(reda$arsenic),mean(reda$I.arsenic.2.),x,x^2,mean(reda$educ),mean(reda$assoc) ) %*% coef(mo2))
+  }
+ggplot(reda)+aes(x=lg_dis,y=switch,colour=factor(switch)) + geom_jitter(height = 0.1) + stat_function(fun = predfun)
+```
+
+3. Make a residual plot and binned residual plot as in Figure 5.13.
+```{r dpi=500, fig.height=3.7}
+red = data.frame(cbind(mo2$residuals,mo2$fitted.values))
+colnames(red) = c('residuals','fitted.values')
+ggplot(red) + geom_point(aes(y = residuals, x = fitted.values))
+binnedplot(fitted(mo2),resid(mo2,type="response"))
+
+```
+
+4. Compute the error rate of the fitted model and compare to the error rate of the null model.
+
+```{r}
+glm.prob = predict(mo2,type = 'response')
+glm.pred=ifelse(glm.prob>0.5,"Yes","No")
+er = table(glm.pred,dat$switch)
+kable(er,caption = "Error Table",align = "c",digits = 3,
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
+```
+
+5. Create indicator variables corresponding to `dist < 100`, `100 =< dist < 200`, and `dist > 200`. Fit a logistic regression for Pr(switch) using these indicators. With this new model, repeat the computations and graphs for part (1) of this exercise.
+
+```{r dpi=500}
+dat$dist_c[dat$dist<100]=0
+dat$dist_c[dat$dist>=100 & dat$dist <200]=1
+dat$dist_c[dat$dist>=200]=2
+disc = dat %>% group_by(dist_c) %>% summarise(prob = sum(switch)/length(switch))
+colnames(disc) = c('DIST_Categorical','Probability')
+ggplot(data = data.frame(disc)) + geom_point(aes(y = Probability, x = DIST_Categorical),size = 10) + xlab("DIST_Categorical") + ylab("Probability of Switch")
+```
+
+```{r}
+mo3 = glm(data = dat, switch ~ arsenic+ I(arsenic^2) + dist_c + educ + assoc, family = binomial(link = "logit"))
+summary(mo3)
+```
+```{r dpi=500}
+reda2 = data.frame(cbind(mo3$fitted.values,mo3$model))
+predfun<- function(x){ 
+  invlogit (cbind (1,mean(reda$arsenic),mean(reda$I.arsenic.2.),x,mean(reda$educ),mean(reda$assoc) ) %*% coef(mo3))
+  }
+ggplot(reda2)+aes(x=dist_c,y=switch,colour=factor(switch)) + geom_jitter(height = 0.1) + stat_function(fun = predfun)
+```
+```{r dpi=500}
+red2 = data.frame(cbind(mo3$residuals,mo3$fitted.values))
+colnames(red2) = c('residuals','fitted.values')
+ggplot(red2) + geom_point(aes(y = residuals, x = fitted.values))
+binnedplot(fitted(mo3),resid(mo3,type="response"))
+```
+```{r}
+glm.prob2 = predict(mo3,type = 'response')
+glm.pred2=ifelse(glm.prob2>0.5,"Yes","No")
+er2 = table(glm.pred2,dat$switch)
+kable(er2,caption = "Error Table",align = "c",digits = 3,
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
+```
+
+### Model building and comparison: 
+
+continue with the well-switching data described in the previous exercise.
+
+1. Fit a logistic regression for the probability of switching using, as predictors, distance, `log(arsenic)`, and their interaction. Interpret the estimated coefficients and their standard errors.
+
+\qquad Because we need to consider the interaction between distance and arsenic, it is not recommended to interact two continuous variables, so we use the categorical version of distance we generated in previous question. Actually here if we simply add dist_c into the model, it is not a proper way adding categorical data, we shouold choose dist_c = 0 as reference, then add two dummy variables representing dist_c =1 and 2, but for simplicity, we just do so.   
+
+```{r}
+mo4 = glm(data = dat, switch~dist_c+log(arsenic)+dist:log(arsenic),family = binomial(link = 'logit'))
+summary(mo4)
+```
+
+2. Make graphs as in Figure 5.12 to show the relation between probability of switching, distance, and arsenic level.
+
+```{r dpi=500}
+reda3 = data.frame(cbind(mo4$fitted.values,mo4$model))
+predfun0<- function(x){ 
+  invlogit (cbind (1,0,x,0*x) %*% coef(mo4))
+}
+predfun1<- function(x){ 
+  invlogit (cbind (1,1,x,1*x) %*% coef(mo4))
+}
+predfun2<- function(x){ 
+  invlogit (cbind (1,2,x,2*x) %*% coef(mo4))
+}
+
+ggplot(dat)+aes(x=arsenic,y=switch,colour=factor(switch)) + geom_jitter(height = 0.1) + stat_function(fun = predfun0,aes(color = 'dis_c=0'),size =1.5) + stat_function(fun = predfun1,aes(color = 'dis_c=1'),size =1.5)+ stat_function(fun = predfun2,aes(color = 'dis_c=2'),size =1.5)
+```
+3. Following the procedure described in Section 5.7, compute the average predictive differences corresponding to:
+i. A comparison of dist = 0 to dist = 100, with arsenic held constant. 
+ii. A comparison of dist = 100 to dist = 200, with arsenic held constant.
+iii. A comparison of arsenic = 0.5 to arsenic = 1.0, with dist held constant. 
+iv. A comparison of arsenic = 1.0 to arsenic = 2.0, with dist held constant.
+Discuss these results.
+
+\qquad Comparison of dist = 0 to dist = 100, with arsenic held constant.  
+
+```{r echo=T}
+hi = 1
+low = 0
+b = mo4$coefficients
+hi_p = invlogit(b[1] + b[2]*hi + b[3]* mo4$model$`log(arsenic)` +
+                  b[4]*mo4$model$`log(arsenic)`*hi)
+low_p = invlogit(b[1] + b[2]*low + b[3]* mo4$model$`log(arsenic)` +
+                   b[4]*mo4$model$`log(arsenic)`*low)
+mean(hi_p - low_p)
+```
+
+\qquad Comparison of dist = 100 to dist = 200, with arsenic held constant.  
+
+```{r echo=T}
+hi = 2
+low = 1
+b = mo4$coefficients
+hi_p = invlogit(b[1] + b[2]*hi + b[3]* mo4$model$`log(arsenic)` +
+                  b[4]*mo4$model$`log(arsenic)`*hi)
+low_p = invlogit(b[1] + b[2]*low + b[3]* mo4$model$`log(arsenic)` +
+                   b[4]*mo4$model$`log(arsenic)`*low)
+mean(hi_p - low_p)
+```
+
+\qquad Comparison of arsenic = 0.5 to arsenic = 1.0, with dist held constant.  
+
+```{r echo=T}
+hi = 1
+low = 0.5
+b = mo4$coefficients
+hi_p = invlogit(b[1] + b[2]*mo4$model$dist_c + b[3]*hi + b[4]*hi*mo4$model$dist_c)
+low_p = invlogit(b[1] + b[2]*mo4$model$dist_c + b[3]*low + b[4]*low*mo4$model$dist_c)
+mean(hi_p - low_p)
+```
+
+\qquad Comparison of arsenic = 1.0 to arsenic = 2.0, with dist held constant.  
+
+```{r echo=T}
+hi = 2
+low = 1
+b = mo4$coefficients
+hi_p = invlogit(b[1] + b[2]*mo4$model$dist_c + b[3]*hi + b[4]*hi*mo4$model$dist_c)
+low_p = invlogit(b[1] + b[2]*mo4$model$dist_c + b[3]*low + b[4]*low*mo4$model$dist_c)
+mean(hi_p - low_p)
+```
+
+\qquad So according to the result above, we can conclude that:  
+
+\qquad On average, households which are 100 meter or farther from the nearest safe well are 14.5% less likely to switch, compared to households that are 100 meter or closer from the nearest safe well, at the same arsenic level.  
+
+\qquad On average, households which are 200 meter farther from the nearest safe well are 14.0% less likely to switch, compared to households that are 200 meter or closer from the nearest safe well, at the same arsenic level.  
+
+\qquad On average, households whose arsenic level are 1 are 10.7% more likely to switch, compared to households whose arsenic level are 0.5, at the same distant level.  
+
+\qquad On average, households whose arsenic level are 2 are 14.0% more likely to switch, compared to households whose arsenic level are 1, at the same distant level. 
+
+### Building a logistic regression model: 
+the folder rodents contains data on rodents in a sample of New York City apartments.
+
+```{r}
+library(data.table)
+```
+
+Please read for the data details.
+http://www.stat.columbia.edu/~gelman/arm/examples/rodents/rodents.doc
+
+```{r read_rodent_data, echo=FALSE}
+apt.subset.data <- read.table ("http://www.stat.columbia.edu/~gelman/arm/examples/rodents/apt.subset.dat", header=TRUE)
+apt_dt <- data.table(apt.subset.data)
+data.table::setnames(apt_dt, colnames(apt_dt),c("y","defects","poor","race","floor","dist","bldg")
+)
+invisible(apt_dt[,asian := race==5 | race==6 | race==7])
+invisible(apt_dt[,black := race==2])
+invisible(apt_dt[,hisp  := race==3 | race==4])
+```
+
+\qquad First we transform the data in race, let 2 represents Asian,3 represents Black,4 represents Hispanish, and 1 represents White.  
+
+```{r echo =T}
+apt_dt$race[apt_dt$asian==T]=2
+apt_dt$race[apt_dt$black==T]=3
+apt_dt$race[apt_dt$hisp==T]=4
+```
+
+1. Build a logistic regression model to predict the presence of rodents (the variable y in the dataset) given indicators for the ethnic groups (race). Combine categories as appropriate. Discuss the estimated coefficients in the model.
+
+\qquad Since we don`t know the real meaning of each variables, so we just use some information criteria as model selection standards, such as $R^2$ and the significance of coefficients.  
+
+```{r}
+moo = glm(data=apt_dt, y~factor(race),family = binomial(link = "logit"))
+summary(moo)
+```
+
+\qquad The result shows that, if the race is 0, the probability of presence of rodents will decrease , if the race is 1,2,and 3, the probability of presence of rodents will significantly increase.  
+
+2. Add to your model some other potentially relevant predictors describing the apartment, building, and community district. Build your model using the general principles explained in Section 4.6 of the Gelman and Hill. Discuss the coefficients for the ethnicity indicators in your model.
+
+```{r}
+mooo = glm(data=apt_dt, y~factor(race)+defects+dist+bldg,family = binomial(link = "logit"))
+summary(mooo)
+```
+
+\qquad Compared to previous model, the main change in ethnicity coefficients is that if the race is 2, it no longer have significant influence on the probability of the presents of rodents, we can deduce that the bias in previous model generated by missing variables "defects".  
+
