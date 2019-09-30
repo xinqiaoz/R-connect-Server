@@ -1,0 +1,86 @@
+---
+title: "Modeling HW3 Part 2"
+author: "Kerui Cao"
+date: "9/29/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,dev="CairoPNG",fig.align = "center", 
+                      fig.width = 5.656, fig.height = 4, global.par = TRUE,warning = F)
+pacman::p_load("tidyverse","knitr","arm","foreign","car","Cairo","kableExtra")
+par (mar=c(3,3,2,1), mgp=c(2,.7,0), tck=-.01)
+```
+
+### Graphing logistic regressions: 
+
+the well-switching data described in Section 5.4 of the Gelman and Hill are in the folder `arsenic`.  
+
+```{r, echo=FALSE}
+wells_dt <- data.frame(read.table("http://www.stat.columbia.edu/~gelman/arm/examples/arsenic/wells.dat", header=TRUE))
+```
+
+#### 1. Fit a logistic regression for the probability of switching using log (distance to nearest safe well) as a predictor.
+
+\qquad Since we know nothing about the real meaning of these variables, we can only try to use information criteria as model selection standard.  
+
+```{r}
+dat = wells_dt
+dat = mutate(dat,lg_dis = log(dist))
+```
+
+```{r dpi=500}
+diss = dat %>% group_by(as.factor(x = round(dat$lg_dis,digits = 1))) %>% summarise(prob = sum(switch)/length(switch))
+colnames(diss) = c('Log_Dis','Probability')
+di = ggplot(data = data.frame(diss),aes(y = Probability, x = Log_Dis)) + geom_point() + xlab("Log Distance") + ylab("Probability of Switch") + scale_x_discrete(breaks = seq(-0.9,5.8,0.7))
+
+edu = dat %>% group_by(educ) %>% summarise(prob = sum(switch)/length(switch))
+colnames(diss) = c('Edu','Probability')
+ed = ggplot(data = data.frame(edu),aes(y = prob,x = educ)) + geom_point()
+
+ars = dat %>% group_by(as.factor(x = round(dat$arsenic,digits = 1))) %>% summarise(prob = sum(switch)/length(switch))
+colnames(ars) = c('Arsenic','Probability')
+ar = ggplot(data = data.frame(ars),aes(y = Probability, x = Arsenic)) + geom_point()+ xlab("Arsenic") + ylab("Probability of Switch") + scale_x_discrete(breaks = seq(0.5,9.7,1))
+
+ass = dat %>% group_by(assoc) %>% summarise(prob = sum(switch)/length(switch))
+colnames(ass) = c('Assoc','Probability')
+as = ggplot(data = data.frame(ass)) + geom_point(aes(y = Probability, x = Assoc),size = 10) + xlab("Assoc") + ylab("Probability of Switch") 
+
+gridExtra::grid.arrange(di,ed,ar,as,ncol=2)
+```
+
+\qquad Based on the figures above, we consider the following model:  
+
+```{r}
+mo2 = glm(data = dat, switch ~ arsenic+ I(arsenic^2) + lg_dis + I(lg_dis^2) + educ + assoc, family = binomial(link = "logit"))
+summary(mo2)
+```
+
+2. Make a graph similar to Figure 5.9 of the Gelman and Hill displaying Pr(switch) as a function of distance to nearest safe well, along with the data.
+```{r}
+reda = data.frame(cbind(mo2$fitted.values,mo2$model))
+ggplot(data = reda,aes())
+```
+
+3. Make a residual plot and binned residual plot as in Figure 5.13.
+```{r}
+predfun<- function(x){ 
+  invlogit (cbind (1,mean(reda$arsenic),mean(reda$`I(arsenic^2)`),x,x^2,mean(reda $educ),mean(reda$assoc) ) %*% coef(mo2))
+  }
+ggplot(reda)+aes(x=lg_dis,y=switch,colour=factor(switch)) + geom_jitter(height = 0.1) + stat_function(fun = predfun)
+```
+
+4. Compute the error rate of the fitted model and compare to the error rate of the null model.
+
+```{r}
+glm.prob = predict(mo2,type = 'response')
+glm.pred=ifelse(glm.prob>0.5,"Yes","No")
+table(glm.pred,dat$switch)
+
+```
+
+5. Create indicator variables corresponding to `dist < 100`, `100 =< dist < 200`, and `dist > 200`. Fit a logistic regression for Pr(switch) using these indicators. With this new model, repeat the computations and graphs for part (1) of this exercise.
+
+```{r}
+
+```

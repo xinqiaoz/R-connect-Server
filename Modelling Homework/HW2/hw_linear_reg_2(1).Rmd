@@ -108,7 +108,7 @@ gridExtra::grid.arrange(pnl,pl,ncol=2)
 ```{r}
 mo = lm(log(earn,10)~h_over_m+I(h_over_m^2)+I(h_over_m^3),data = hi)
 summary(mo)
-car::qqPlot(mo$residuals)
+car::qqPlot(mo$residuals, id=F)
 ```
 \qquad From result above, we can see that the performance of the model is poor, whose residuals are not normally distributed and even not close. I tried different combination of predictors, including heighs and the power of height. The coefficience of model shows that only the coefficience of height is significant, Which means one unit increase(1 inch) will increase the earn by around $2.8\%$.  
 
@@ -129,20 +129,20 @@ hi$sex=hi$sex-1
 ```
 
 ```{r fig.height=6}
-aa1 = ggplot(hi,aes(y=log(earn,10),x=h_over_m,color = as.factor(sex))) + geom_point() + geom_smooth(method = 'lm')
+aa1 = ggplot(hi,aes(y=log(earn,10),x=h_over_m,color = as.factor(sex))) + geom_point() + geom_smooth(method = 'lm') + theme(legend.position = 'top')
 aa2 = ggplot(hi,aes(y=log(earn,10),x = as.factor(sex))) + geom_boxplot()
 gridExtra::grid.arrange(aa1,aa2,ncol=1)
 ```
 \qquad For sex, we can reasonablly guess that sex does affect the average of earning and the way height affecting earn.  
 ```{r}
-ggplot(hi,aes(y=log(earn,10),x=ed,color = as.factor(sex))) + geom_point() + geom_smooth()
+ggplot(hi,aes(y=log(earn,10),x=ed,color = as.factor(sex))) + geom_point() + geom_smooth() + theme(legend.position = 'top')
 ```
 \qquad We can tell the eduacation level is related to earn, rough judge from above figure, we can tell that higher education level, higher earning, and sex has no obvious effect on the slope of education level.  
 ```{r fig.height=3.8}
 mu = lm(log(earn,10)~h_over_m+sex+I(log(ed))+sex:h_over_m+I(log(ed)*sex),data = hi)
 summary(mu)
 ggplot()+geom_histogram(aes(x=mu$residuals))
-car::qqPlot(mu$residuals, envelope = 0.99,grid=F)
+car::qqPlot(mu$residuals, envelope = 0.99,grid=F, id=F)
 ```
 \qquad After adding new variables to our model, $R^2$ increased a little, but the residuals of model is still not normally distributed.  
 
@@ -206,8 +206,8 @@ ggplot(data = pollution,aes(y = mort/100, x = nox)) + geom_point() + geom_smooth
 
 #### 2. Find an appropriate transformation that will result in data more appropriate for linear regression. Fit a regression to the transformed data and evaluate the new residual plot.
 
-```{r fig.height = 3.3}
-ggplot(data = pollution[which(pollution$nox<100),],aes(y = mort/100, x = nox)) + geom_point() + geom_smooth(aes(colour="non-linear fit"),se =F) + geom_smooth(method = 'lm',aes(colour="linear fit"),se =F)
+```{r fig.height = 2.8}
+ggplot(data = pollution[which(pollution$nox<100),],aes(y = mort/100, x = nox)) + geom_point() + geom_smooth(aes(colour="non-linear fit"),se =F) + geom_smooth(method = 'lm',aes(colour="linear fit"),se =F) + theme(legend.position = 'top')
 ```
 
 \qquad Exclude those two outliers, we can tell that we may try to add $nox^3$ to the predictors.  
@@ -221,7 +221,7 @@ summary(m)
 
 ```{r fig.height = 3.3}
 ggplot() + geom_histogram(aes(x =m$residuals),bins = 18)
-car::qqPlot(m$residuals)
+car::qqPlot(m$residuals,id=F)
 ```
 
 \qquad Even the $R^2$ is small, but the residuals comply with normal distribution.  
@@ -254,7 +254,7 @@ gridExtra::grid.arrange(p1,p2,ncol=1)
 ```{r}
 mm = lm(mort~nox+I(nox^3)+I(so2^(-1))+I(hc^2),data = pollution)
 summary(mm)
-car::qqPlot(mm$residuals)
+car::qqPlot(mm$residuals,id=F)
 ```
 
 \qquad According to the result of the model, the residuals comply with normal distribution, the coefficients of the power of nox and hc are significant, but the coefficient of so2 are not even I have tried several diffrent transformation, but due to the correlation between nox, so2 and hc is high (nox~so2:`r cor(pollution$nox, pollution$so2)`), it`s better to delete this variables so that the coefficients of nox and hc will not be affected.  
@@ -287,61 +287,96 @@ data(teengamb)
 ```{r fig.height=10}
 g1 = ggplot(teengamb,aes(y=gamble,x = status)) + geom_point() + geom_smooth(aes(colour="non-linear fit"),se =F) + geom_smooth(method = 'lm',aes(colour="linear fit"),se =F) +theme(legend.position = 'top') + ylab("")
 g2 = ggplot(teengamb,aes(y=gamble,x = income)) + geom_point() + geom_smooth(aes(colour="non-linear fit"),se =F) + geom_smooth(method = 'lm',aes(colour="linear fit"),se =F) +theme(legend.position = 'top')+ ylab("")
-g3 = ggplot(teengamb,aes(y=gamble,x = verbal)) + geom_point() + geom_smooth(aes(colour="non-linear fit"),se =F) + geom_smooth(method = 'lm',aes(colour="linear fit"),se =F) +theme(legend.position = 'top')+ ylab("")
+g3 = ggplot(teengamb,aes(y=gamble,x = verbal)) + geom_point() + geom_smooth(aes(colour="non-linear fit"),se =F) + geom_smooth(method = 'lm',aes(colour="linear fit"),se =F) +theme(legend.position = 'none')+ ylab("")
 g4 = ggplot(teengamb) + geom_boxplot(aes(y=gamble,x = as.factor(sex)))+ ylab("")
-g5 = ggplot(teengamb,aes(y=gamble,x = status,color = as.factor(sex))) + geom_point() + geom_smooth(method = 'lm',se =F) + theme(legend.position = 'top') + ylab("")
-g6 = ggplot(teengamb,aes(y=gamble,x = income,color = as.factor(sex))) + geom_point() + geom_smooth(method = 'lm',se =F) + theme(legend.position = 'top') + ylab("")
-g7 = ggplot(teengamb,aes(y=gamble,x = verbal,color = as.factor(sex))) + geom_point() + geom_smooth(method = 'lm',se =F) + theme(legend.position = 'top') + ylab("")
+g5 = ggplot(teengamb,aes(y=gamble,x = status,color = as.factor(sex))) + geom_point() + geom_smooth(method = 'lm',se =F) + theme(legend.position = 'top') + ylab("") 
+g6 = ggplot(teengamb,aes(y=gamble,x = income,color = as.factor(sex))) + geom_point() + geom_smooth(method = 'lm',se =F) + theme(legend.position = 'none') + ylab("")
+g7 = ggplot(teengamb,aes(y=gamble,x = verbal,color = as.factor(sex))) + geom_point() + geom_smooth(method = 'lm',se =F) + theme(legend.position = 'none') + ylab("")
 grid.arrange(arrangeGrob(g1,g2,g3,g4,ncol = 2),g5,g6,g7,ncol=1,heights = c(2.5,1,1,1))
 ```
 
 \qquad According to figure above, we consider adding the power of status and verbal as predictors, and also we may consider the interaction between sex and other predictors.
-```{r}
+```{r fig.height=3.5}
 sm = lm(data = teengamb, gamble~status + I(status^2)+income+verbal+sex+sex:status+sex:income)
 summary(sm)
-
+car::qqPlot(sm$residuals,envelope = 0.95,id=F)
 ```
 
-```{r}
-lm(data = teengamb, gamble~status+I(status^2)+income)
-```
+\qquad From above result, most of the coefficients are significant, and residuals comply with normal distribution. Coefficients interpretatoin:  
+*status and status:sex*: because the coefficient of the power of status is too small compared to the coefficient of status, so we can ignore it, so the coefficient of status means that one unit change in social status, keeping others unchanged, the average expenditure on gambling per year will decrease around 3.5 pound for male, for female, it will only decrease 2.42 pounds;  
+
+*income and oncome:sex*: one pound increase of weekage, keeping others unchaged, expenditure on gambling will increase by 5.7 pounds for male, for female, it will decrease by 0.1 pounds;  
+
+*verbal*: one unit increase in verbal score, keeping others unchanged, expenditure on gambling will decrease by 0.9 pounds;  
+
+*sex*: the average expenditure on gambling for female is 43 pounds less than male.  
 
 2. Create a 95% confidence interval for each of the estimated coefficients and discuss how you would interpret this uncertainty.
 
 ```{r}
+kable(confint(sm,level = 0.99),align = 'c',caption = "Confident Interval of Coefficients",booktab = T,format = 'latex') %>% kable_styling(latex_options = "hold_position",bootstrap_options = c('striped','hover','condensed',"responsive"))
 
 ```
 
 3. Predict the amount that a male with average status, income and verbal score would gamble along with an appropriate 95% CI.  Repeat the prediction for a male with maximal values of status, income and verbal score.  Which CI is wider and why is this result expected?
 
 ```{r}
-
+me = matrix(c(0,mean(teengamb$status),mean(teengamb$income),mean(teengamb$verbal),0),nrow = 1)
+mx = matrix(c(0,max(teengamb$status),max(teengamb$income),max(teengamb$verbal),0),nrow = 1)
+p = rbind(me,mx)
+colnames(p)=c('sex','status','income','verbal','gemble')
+pp = data.frame(predict(sm,newdata = data.frame(p), interval = "confidence",level = 0.95))
+pp$variate = pp$upr - pp$lwr
+rownames(pp)=c('Mean level','max level')
+kable(pp,align = 'c',caption = "prediction of gamble",booktab = T,format = 'latex') %>% kable_styling(latex_options = "hold_position",bootstrap_options = c('striped','hover','condensed',"responsive"))
 ```
+
+\qquad From above result, the CI of prediction using max level is bigger.  
 
 ### School expenditure and test scores from USA in 1994-95
 
 ```{r}
 data(sat)
-#?sat
 ```
 
 1. Fit a model with total sat score as the outcome and expend, ratio and salary as predictors.  Make necessary transformation in order to improve the interpretability of the model.  Interpret each of the coefficient.
 
 ```{r}
-
+d1 = ggplot(sat,aes(y=total,x = expend)) + geom_point() + geom_smooth(aes(colour="non-linear fit"),se =F) + geom_smooth(method = 'lm',aes(colour="linear fit"),se =F) +theme(legend.position = 'right') + ylab("")
+d2 = ggplot(sat,aes(y=total,x = ratio)) + geom_point() + geom_smooth(aes(colour="non-linear fit"),se =F) + geom_smooth(method = 'lm',aes(colour="linear fit"),se =F) +theme(legend.position = 'right') + ylab("")
+d3 = ggplot(sat,aes(y=total,x = salary)) + geom_point() + geom_smooth(aes(colour="non-linear fit"),se =F) + geom_smooth(method = 'lm',aes(colour="linear fit"),se =F) +theme(legend.position = 'right') + ylab("")
+grid.arrange(d1,d2,d3,ncol=1)
 ```
+
+\qquad we can tell from the above figure, that a linear relationship may be enough.  
+```{r}
+mat = lm(data = sat, total~expend+ratio+salary)
+summary(mat)
+```
+
+\qquad Clearly that the SAT score has nothing to do with expend and ratio, but salary has some influence on sat score. Coefficients interpretation:  
+
+*expend*: One unit increase in expend may increase the sat score by 11.4, keeping others unchanged;  
+
+*ratio*: One unit increase in ratio may decrease the Sat score by 0.436, keeping other unchanged;  
+
+*salary*: Due to the coefficient of $salary^2$ is too small compared to the coefficient of salary, we just ignore the coefficient of $salary^2$, so the coefficient of salary means that one unit increase insalary will decrease the SAT score by 19.06.  
 
 2. Construct 98% CI for each coefficient and discuss what you see.
 
 ```{r}
+kable(confint(mat,level = 0.98),align = 'c',caption = "Confident Interval of Coefficients",booktab = T,format = 'latex',digits = 2) %>% kable_styling(latex_options = "hold_position",bootstrap_options = c('striped','hover','condensed',"responsive"))
 
 ```
 
 3. Now add takers to the model.  Compare the fitted model to the previous model and discuss which of the model seem to explain the outcome better?
 
 ```{r}
-
+mat2 = lm(data = sat, total~expend+ratio+salary+takers)
+summary(mat2)
 ```
+
+\qquad Adding takers into the model improves the performance of this model a lot, mainly represented by the bigger $R^2$, which increases $61\%$.  
 
 # Conceptual exercises.
 
@@ -367,6 +402,12 @@ $$\mathrm{y}=\alpha + \beta \mathrm{x} + \mathrm{\epsilon}$$
 which results in estimates $\hat{\alpha}=1$, $\hat{\beta}=0.9$, $SE(\hat{\beta})=0.03$, $\hat{\sigma}=2$ and $r=0.3$.
 
 1. Suppose that the explanatory variable values in a regression are transformed according to the $\mathrm{x}^{\star}=\mathrm{x}-10$ and that $\mathrm{y}$ is regressed on $\mathrm{x}^{\star}$.  Without redoing the regression calculation in detail, find $\hat{\alpha}^{\star}$, $\hat{\beta}^{\star}$, $\hat{\sigma}^{\star}$, and $r^{\star}$.  What happens to these quantities when $\mathrm{x}^{\star}=10\mathrm{x}$ ? When $\mathrm{x}^{\star}=10(\mathrm{x}-1)$?
+
+\qquad If we transform $x$ into $x-10$, $\hat{\alpha}^{\star}=\hat{\alpha}+10\times\hat{\beta}=1+10\times0.9=91$, $\hat{\beta},\hat{\sigma},r$ remains.  
+
+\qquad If we we change $x$ into $10x$, $\hat{\beta}^{\star}=\frac{\hat{\beta}}{10}=9\times10^{-2},\hat{\sigma}^{\star}=\frac{\hat{\sigma}}{10^2}=3\times10^{-4}$, $\hat{\alpha},r$ remains.  
+
+\qquad If we transform $x$ into $10(x-1)$, $\hat{\alpha}^{\star}=91,\hat{\beta}^{\star}=9\times10^{-2},\hat{\sigma}^{\star}=3\times10^{-4}$, $r$ remains.
 
 
 2. Now suppose that the response variable scores are transformed according to the formula

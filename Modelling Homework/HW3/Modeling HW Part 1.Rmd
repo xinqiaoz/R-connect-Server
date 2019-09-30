@@ -1,0 +1,176 @@
+---
+title: "Modeling HW Part 1"
+author: "Kerui Cao"
+date: "9/26/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,dev="CairoPNG",fig.align = "center", 
+                      fig.width = 5.656, fig.height = 4, global.par = TRUE,warning = F)
+#install.packages("pacman",repos="https://cloud.r-project.org")
+pacman::p_load("tidyverse","knitr","arm","foreign","car","Cairo","kableExtra")
+par (mar=c(3,3,2,1), mgp=c(2,.7,0), tck=-.01)
+```
+
+# Data analysis 
+
+### 1992 presidential election
+
+#### The folder `nes` contains the survey data of presidential preference and income for the 1992 election analyzed in Section 5.1, along with other variables including sex, ethnicity, education, party identification, and political ideology.
+
+```{r, echo=FALSE}
+nes5200<-read.dta("http://www.stat.columbia.edu/~gelman/arm/examples/nes/nes5200_processed_voters_realideo.dta")
+#saveRDS(nes5200,"nes5200.rds")
+#nes5200<-readRDS("nes5200.rds")
+```
+```{r}
+nes5200_dt <- data.table::data.table(nes5200)
+  yr <- 1992
+nes5200_dt_s<-nes5200_dt[ year==yr & presvote %in% c("1. democrat","2. republican")& !is.na(income)]
+nes5200_dt_s<-nes5200_dt_s[,vote_rep:=1*(presvote=="2. republican")]
+nes5200_dt_s$income <- droplevels(nes5200_dt_s$income)
+```
+
+#### 1.  Fit a logistic regression predicting support for Bush given all these inputs. Consider how to include these as regression predictors and also consider possible interactions.
+
+\qquad Before dive into analysis, we have to reorganize and clean the data, for example we can notice that there are a lot missing values,we have to delete them or impute them.  
+
+```{r}
+info=NULL
+nes5200_dt_s=data.frame(nes5200_dt_s)
+for(i in 1:length(names(nes5200_dt_s))){
+  num_of_uniquevalue=length(unique(nes5200_dt_s[,i]))
+  Na = sum(is.na(nes5200_dt_s[,i]))
+  P_na = (Na)/length(nes5200_dt_s[,i])
+  info = cbind(info,matrix(c(num_of_uniquevalue,Na,P_na),ncol = 1))
+}
+rownames(info)=c('Number of Unique Value','Number of Missing Value','% of Missing Value')
+colnames(info)=names(nes5200_dt_s)
+info = info[,order(info[3,],decreasing = T)]
+kable(info[,1:5],caption = "Most Missing Value Variables",align = "c",digits = 3,
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(font_size = 8,bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
+kable(info[,59:63],caption = "Least Missing Value Variables",align = "c",digits = 3,
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(font_size = 8,bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
+info = info[,order(info[1,])]
+kable(info[,1:5],caption = "Least Unique Value Variables",align = "c",digits = 3,
+      format = 'latex',booktabs=T,longtable=T) %>% 
+  kable_styling(font_size = 8,bootstrap_options = 
+                  c('striped','hover','condensed',"responsive"))
+```
+
+\qquad According to the table above, we can see that for some variables, they are all missing values, and for some variables, they have only one value, for now we will delete all of these kind of variables, as for variables that is partly missing, we will deal with them later after predictors being decided.  
+
+```{r}
+da = nes5200_dt_s
+delete = which(apply(da,2,function(x){x%>%unique%>%length})==1)
+da = da[,-1*delete]
+da = na.omit(da)
+```
+
+\qquad Take a look at the data, there are many categoriacal variables, so we have to transform them into numeric data.  
+
+```{r}
+da = separate(da,gender,c('gender'),convert = T)
+da$gender = da$gender - 1
+da = separate(da,race,c('race'),convert = T)
+da = separate(da,educ1,c('r_education'),convert = T)
+da = separate(da,urban,c('urban'),convert = T)
+da = separate(da,region,c('region'),convert = T)
+da = separate(da,income,c('income_level'),convert = T)
+da = separate(da,occup1,c('r_occup'),convert = T)
+da = separate(da,religion,c('religion'),convert = T)
+da = separate(da,educ2,c('f_educ'),convert = T)
+da = separate(da,educ3,c('m_educ'),convert = T)
+da = separate(da,martial_status,c('martial'),convert = T)
+da = separate(da,partyid7,c('par_id_7'),convert = T)
+da = separate(da,partyid3_b,c('par_id_3'),convert = T)
+da = separate(da,father_party,c('father_party'),convert = T)
+da = separate(da,mother_party,c('mother_party'),convert = T)
+da = separate(da,presvote,c('pre_vote'),convert = T)
+da$pre_vote = da$pre_vote-1
+```
+
+\qquad As for the dependent variablel, there is no variable in data that shows the final vote for each respondents, so we can only use the result for prevote as the estimate of final vote result. and according to the formation of data set nes5200_dt_s, the value of presvote can only be "democrat" or "republican", 1 represents democrat, 2 represents republicans, in order to construct logistic regression, we substract prevotes by 1, so here 0 represents democrat, 1 represents republicans. 
+
+\qquad After the precess above, we can begin to analyze the data, first we plot some intersted variables against the dependant variable:  
+
+```{r , dpi= 500}
+ge = da[,c('pre_vote','gender')]
+ge %<>% group_by(gender) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+ge= cbind(ge,"gender")
+# ge = rbind(ge,"",'','','')
+ra = da[,c('pre_vote','race')]
+ra %<>% group_by(race) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+ra= cbind(ra,"race")
+#ra = rbind(ra,"")
+ed = da[,c('pre_vote','r_education')]
+ed %<>% group_by(r_education) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+ed= cbind(ed,"education")
+#ed = rbind(ed,"",'')
+ur = da[,c('pre_vote','urban')]
+ur %<>% group_by(urban) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+ur= cbind(ur,"urban")
+#ur = rbind(ur,"",'','')
+re = da[,c('pre_vote','region')]
+re %<>% group_by(region) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+re= cbind(re,"region")
+#re = rbind(re,"",'')
+ic = da[,c('pre_vote','income_level')]
+ic %<>% group_by(income_level) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+ic= cbind(ic,"income")
+#ic = rbind(ic,"")
+oc = da[,c('pre_vote','r_occup')]
+oc %<>% group_by(r_occup) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+oc= cbind(oc,"occupation")
+rl = da[,c('pre_vote','religion')]
+rl %<>% group_by(religion) %>% summarise(prob = round(sum(pre_vote==1)/length(pre_vote),2))
+rl= cbind(rl,"religion")
+#rl = rbind(rl,"",'')
+colnames(ge) = c('Code','Portion',"variables")
+colnames(ra) = c('Code','Portion',"variables")
+colnames(ed) = c('Code','Portion',"variables")
+colnames(ur) = c('Code','Portion',"variables")
+colnames(re) = c('Code','Portion',"variables")
+colnames(ic) = c('Code','Portion',"variables")
+colnames(oc) = c('Code','Portion',"variables")
+colnames(rl) = c('Code','Portion',"variables")
+# # rrr = rbind(re,ic,oc,rl)
+# # rrrr = rbind(ge,ra,ed,ur)
+rr= rbind(ge,ra,ed,ur,re,ic,oc,rl)
+# kable(rrr,caption = "portion of voting republican",align = "c",digits = 2,
+#       format = 'latex',booktabs=T,longtable=T) %>%
+#   kable_styling(bootstrap_options =
+#                   c('striped','hover','condensed',"responsive"),latex_options = 'hold_position')
+# kable(rrrr,caption = "portion of voting republican",align = "c",digits = 2,
+#       format = 'latex',booktabs=T,longtable=T) %>%
+#   kable_styling(bootstrap_options =
+#                   c('striped','hover','condensed',"responsive"),latex_options = 'hold_position')
+ggplot(rr) +
+ aes(x = Code, y = Portion) +
+ geom_line(size = 1L, colour = "#0c4c8a") +
+ theme_minimal() +
+ facet_wrap(vars(variables), scales = "free_x") +xlab('Variables') + ylab('Probability of voting Republican')
+```
+
+\qquad We can see that the probability of voting Republican varies a lot for each variables we choose. Now we can construct logistic regression, as for transformation of variables, because most of the input variables are categorical variables, so it is not helpful to transform categorical variables, so does interaction between categorical.  
+
+```{r}
+mo1 = glm(data = da, pre_vote ~ age+gender+factor(race)+factor(r_education)+factor(urban)+factor(region)+factor(income_level)+factor(r_occup)+factor(religion)+factor(martial)+factor(par_id_3)+factor(father_party)+factor(mother_party),family = binomial(link = 'logit'))
+summary(mo1)
+```
+
+## 2. Evaluate and compare the different models you have fit. Consider coefficient estimates and standard errors, residual plots, and deviances.
+
+```{r dpi=500}
+binnedplot(fitted(mo1),resid(mo1,type="response"))
+```
+
+3. For your chosen model, discuss and compare the importance of each input variable in the prediction.
+
+\qquad For the result of regression, we can see that race and party identity are important to their voting behavior.
+
