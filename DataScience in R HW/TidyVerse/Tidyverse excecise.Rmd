@@ -5,6 +5,8 @@ date: "10/1/2019"
 output: pdf_document
 ---
 
+## Problem 1
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F,warning = F,fig.height = 4)
 pacman::p_load("tidyverse","knitr","kableExtra","gapminder","magrittr")
@@ -19,7 +21,7 @@ da = gapminder
 Num_of_continent = da$continent %>% unique %>% length
 ```
 
-\qquad So the numbers of countries is `r Num_of_continent`.  
+\qquad The numbers of countries is `r Num_of_continent`.  
 
 ### How many countrys are included? How many countries per continent?  
 
@@ -70,7 +72,7 @@ kable(Summary_2007, caption = "Summary for GDP per Capita in 2007", align = "c",
 
 ### Product a plot that summarizes the same data as the table. There should be two plots per continent. 
 
-\qquad Summary for year 1952  
+***Summary for year 1952***  
 
 ```{r}
 a1=ggplot(Summary_1952) +
@@ -96,7 +98,7 @@ a4=ggplot(Summary_1952) +
 gridExtra::grid.arrange(a1,a2,a3,a4,ncol=2)
 ```
 
-\qquad Summary for year 2007  
+***Summary for year 2007***  
 
 ```{r}
 a1=ggplot(Summary_2007) +
@@ -141,3 +143,155 @@ tt = da %>% group_by(country) %>% summarise(Max_GR = max(diff(Log_gdpC))) %>% ar
 kable(tt[1:10,],format = "latex",booktab=T,align = "c",caption = "Log Growth Rate") %>% kable_styling(latex_options = "HOLD_position")
 ```
 
+## Problem2
+
+```{r message=F}
+library(AER)
+data("Fertility")
+daa = Fertility
+```
+
+### Frequency of four combinations.  
+
+```{r fig.width=8}
+c = daa %>% group_by(gender1,gender2) %>% summarise(count = length(age))
+c$"prop" = c$count/sum(c$count)
+c1 = ggplot(c,aes(y = gender1,x = gender2,fill = count)) + geom_tile()+geom_text(aes(label = count)) +
+    scale_fill_gradient(low = "white", high = "red") + theme(legend.position = "") + ggtitle("Counts for four combinations")
+c2 = ggplot(c,aes(y = gender1,x = gender2,fill = prop)) + geom_tile()+ geom_tile()+geom_text(aes(label = round(prop,2))) +
+    scale_fill_gradient(low = "white", high = "red")  + theme(legend.position = "")+ ggtitle("Proportion for four combinations")
+gridExtra::grid.arrange(c1,c2,ncol=2)
+```
+
+### Are the frequencies different for women in their 20s and wemen who are older than 29?  
+
+```{r fig.width=8}
+c29 = daa %>% filter(age>29) %>% group_by(gender1,gender2) %>% summarise(count = length(age))
+c29$"prop" = c$count/sum(c$count)
+
+c30 = daa %>% filter(age>30) %>% group_by(gender1,gender2) %>% summarise(count = length(age))
+c30$"prop" = c$count/sum(c$count)
+
+cc29 = ggplot(c29,aes(y = gender1,x = gender2,fill = count)) + geom_tile()+geom_text(aes(label = count)) +
+    scale_fill_gradient(low = "white", high = "red") + theme(legend.position = "")+ ggtitle("Age before 30")
+cc30 = ggplot(c30,aes(y = gender1,x = gender2,fill = count)) + geom_tile()+geom_text(aes(label = count)) +
+    scale_fill_gradient(low = "white", high = "red") + theme(legend.position = "")+ ggtitle("Age after 30")
+gridExtra::grid.arrange(cc29,cc30,ncol=2)
+```
+
+### Produce a plot that contrasts the frequency of having more than two children by race and ethnicity.  
+
+\qquad According to the description of Fertility, we can know that there are conflicts in the ethnicity, so we just choose those records that don`t conflict.  
+
+```{r}
+e = daa %>% group_by(afam,hispanic,other) %>% summarise(count=sum(morekids=="no"))
+e = e[c(1,2,3,5),]
+e$"Ethnicity" = c("Caucasian","None","hispanish","African-American")
+e$"frequency" = e$count/sum(e$count)
+
+library(ggplot2)
+
+ggplot(e) +
+ aes(x = Ethnicity, weight = frequency) +
+ geom_bar(fill = "#0c4c8a") +
+ theme_minimal() + ylab("Frequency of having more than two kids")
+```
+
+## Problem 3
+
+### How many times does the letter “e” occur in mtcars rownames?  
+
+```{r}
+data("mtcars")
+```
+```{r echo = T}
+q3 = sum(str_count(rownames(mtcars),"e"))
+```
+
+\qquad There are `r q3` cars whose names contain "e".  
+
+### How many cars in mtcars have the brand Merc?  
+
+```{r echo = T}
+q4 = sum(str_detect(rownames(mtcars),"Merc"))
+```
+
+\qquad There are `r q4` cars in mtcars have the brand Merc.  
+
+### How many cars in mpg have the brand(“manufacturer” in mpg) Merc?  
+
+```{r}
+data(mpg)
+q5 = sum(str_detect(mpg$manufacturer,"merc"))
+```
+
+\qquad `r q5` cars in mpg have the brand Merc.  
+
+### Contrast the mileage data for Merc cars as reported in mtcars and mpg. Use tables, plots, and a short explaination.
+
+```{r}
+
+```
+
+## Problem 4
+
+```{r}
+library(babynames)
+data("babynames")
+```
+
+\qquad Sample 500000 records from "babynames".  
+
+```{r echo=T}
+R_in = sample(1:1924665,500000,replace = F)
+sam_da = babynames[R_in,]
+```
+
+### Produce a table that displays the five most popular boy names and girl names in the years 1880,1920,1960,2000.  
+
+```{r}
+y = c(1880,1920,1960,2000)
+se = c("F","M")
+re = NULL
+for(i in y){
+  for(j in se){
+    a = filter(sam_da,year==i,sex==j) %>% arrange(desc(n))
+    re=rbind(re,as.matrix(a[1:5,]))
+  }
+}
+kable(re, caption = "Most popular name each year", align = "c", booktab =T,format = "latex") %>% kable_styling(latex_options = c("HOLD_position"))
+```
+
+### What names overlap boys and girls?  
+
+```{r echo=T}
+hh = sam_da %>% group_by(year,name) %>% summarise(cou = length(sex)) %>% arrange(desc(cou)) %>% 
+  filter(cou>1)
+unique(hh$name)[1:10]
+```
+
+\qquad There are over 4000 names that overlap boys and girls, so here I displayed 10 of them.  
+
+### What names were used in the 19th century but have not been used in the 21th centure?
+
+```{r echo=T}
+l1 = sam_da %>% filter(year>1999)
+l1 = unique(l1$name)
+l2 = sam_da %>% filter(year<1900)
+l2 = unique(l2$name)
+Int = intersect(l1,l2)
+Int[1:10]
+```
+
+\qquad There are 2562 names that were used in the 19th century but have not been used in the 21th centure, so here I listed 10 of them.  
+
+### Produce a chart that shows the relative frequency of the names "Donald", "Hilary", "Hillary", "Joe", "Barrack", over the years 1880 through 2017.  
+
+```{r}
+ree = sam_da %>% filter(year >1879 & year <2018) %>% group_by(year,name) %>% summarise(co = sum(n)) %>%
+  filter(name == c("Donald", "Hilary", "Hillary", "Joe", "Barrack")) %>% group_by(name) %>% summarise(count = sum(co))
+ree$"frequency" = round(ree$count / sum(ree$count),2)
+```
+```{r}
+kable(ree,align = "c")%>%kable_styling(latex_options = "HOLD_position")
+```
