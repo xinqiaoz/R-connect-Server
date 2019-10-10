@@ -1,0 +1,16 @@
+Basic object: Closing Price
+Transform: Log-return? Arithmetic Return?
+
+Indexes taken into account:
+Barclay`s, Bloomberg, MSCI-Bonds, Treasure Rate? 
+
+Others taken into account:
+Risk: Sharp Ratio? Standard Diviation?
+RElative Risk? What is risk of this category?
+
+Method can be used:
+1.Simple linear regression
+2.ARIMA ARCH ...
+3.VAR (Vector Auto Regression)
+4.Neural Network (On Return)
+5.Cointegration
