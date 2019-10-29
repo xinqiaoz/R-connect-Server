@@ -3,10 +3,10 @@ y = c(-2,-1,0,1.5,2.5)
 l = function(x){
   return(sum(2*(y-x)/(1+(y-x)^2)))
 }
-x=seq(-10,10,0.001)
+x=seq(-2,2,0.001)
 lo = sapply(x,l)
 plot(y = lo,x = x)
-x[which(y==min(y))]
+
 
 lo = cumprod(lo)
 x[which(lo<0)]
