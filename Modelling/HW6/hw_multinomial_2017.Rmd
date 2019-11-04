@@ -1,0 +1,221 @@
+---
+title: "MA678 homework 05"
+subtitle: "Multinomial Regression"
+author: "Your Name"
+date: "September 2, 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo  =  FALSE,warning  =  F,message  =  F,out.width = "0.9\\linewidth",dev = "pdf",fig.align   =  'center',dpi = 500)
+pacman::p_load(
+  "tidyverse",
+  "knitr",
+  "arm",
+  "data.table",
+  "foreign",
+  "car",
+  "faraway",
+  "nnet",
+  "reshape2",
+  "VGAM"
+)
+```
+
+## Multinomial logit: 
+Using the individual-level survey data from the 2000 National Election Study (data in folder nes), predict party identification (which is on a 7-point scale) using ideology and demographics with an ordered multinomial logit model.
+```{r, echo = FALSE}
+nes5200 = read.dta("http://www.stat.columbia.edu/~gelman/arm/examples/nes/nes5200_processed_voters_realideo.dta")
+#saveRDS(nes5200,"nes5200.rds")
+#nes5200 = readRDS("nes5200.rds")
+# logistic regression of vote preference on income
+nes5200_dt  =  data.table(nes5200)
+  yr  =  2000
+nes5200_dt_s = nes5200_dt[ year ==  yr,]
+nes5200_dt_s$income  =  droplevels(nes5200_dt_s$income)
+nes5200_dt_s$partyid7  =  droplevels(nes5200_dt_s$partyid7)
+
+nes5200_dt_s$gender  =  factor(nes5200_dt_s$gender, labels = c("male", "female"))
+nes5200_dt_s$race  =  factor(nes5200_dt_s$race, labels = c("white", "black", "asian", 
+                                    "native american", "hispanic"))
+nes5200_dt_s$south  =  factor(nes5200_dt_s$south)
+
+nes_data_comp = nes5200_dt_s[complete.cases(nes5200_dt_s[,list(partyid7,income,ideo_feel,gender,race,south)])]
+nes_data_comp$ideology  =  scale(nes_data_comp$ideo_feel,center = TRUE) 
+nes_data_comp$ideology = cut(x = nes_data_comp$ideology, breaks = quantile(nes_data_comp$ideology),labels = c("<25%","25%-50%","50%-75%","75%<"),include.lowest = TRUE)
+```
+### 1. Summarize the parameter estimates numerically and also graphically. 
+
+```{r}
+data = nes_data_comp[,c("partyid7","income","ideology","gender","race","south")]
+data = data %>% count(partyid7,income,ideology,gender,race,south)
+mo1 = polr(partyid7~income+ideology+gender+race+south,weights  =  n, data  =  data)
+summary(mo1)
+confint(mo1)
+newdata.nes = expand.grid(income=levels(data$income),
+                          ideology=levels(data$ideology),
+                          gender=levels(data$gender),
+                          race=levels(data$race),
+                          south=levels(data$south))
+pre.nes = predict(mo1,newdata=newdata.nes,type="probs")
+```
+```{r}
+ggplot(melt(cbind(newdata.nes,pre.nes),id.vars = c("income","ideology","gender","race","south")))+   geom_bar(stat="identity")+aes(x=gender,y=value, fill=variable)+
+theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5))+
+facet_grid(~ideology)
+```
+
+\qquad First in order to incorporate and interprte the effet of ideology, I divided it into 4 categories, We can see that, the possibility of belonging to each party identifications, there is only a slight difference between Male and Female in each categories of ideology.  
+
+### 2. Explain the results from the fitted model.  
+
+\qquad Because the responding variable is treated as ordinal, so the cumulative model can be interpreted as the distribution of Y, which is $$P(Y>y_i) = logit^{-1}(X\beta_i)$$
+
+\qquad We can also interpret it as odds, which is:$$\log{P(Y>y_i) \over P(Y\leqslant y_i)} = X\beta$$
+
++ $\log{P(Y=2,3,4,5,6,7) \over P(Y=1)} = -0.2473 + X\beta$
++ $\log{P(Y=3,4,5,6,7) \over P(Y=1,2)} = 0.7236 + X\beta$
++ $\log{P(Y=4,5,6,7) \over P(Y=1,2,3)} = 1.5005 + X\beta$
++ $\log{P(Y=5,6,7) \over P(Y=1,2,3,4)} = 1.8673 + X\beta$
++ $\log{P(Y=6,7) \over P(Y=1,2,3,4,5)} = 2.7418 + X\beta$
++ $\log{P(Y=7) \over P(Y=1,2,3,4,5,6)} = 3.8434 + X\beta$
+
+### 3. Use a binned residual plot to assess the fit of the model.
+```{r,fig.height=10}
+original = pivot_wider(data = data,names_from = partyid7, values_from = n)
+original[is.na(original)]=0
+original[,6:12] = original[,6:12]/apply(original[,6:12],MARGIN = 1,sum)
+pre = predict(mo1,newdata=original[,1:5],type="probs")
+residual = original[,6:12] - pre
+par(mfrow = c(3, 3))
+for(i in 1:7){
+  binnedplot(pre[,i],residual[,i],main = colnames(residual)[i],ylab = "",xlab = "")
+}
+```
+
+
+
+
+# High School and Beyond 
+The hsb data was collected as a subset of the High School and Beyond study conducted by the National Education Longitudinal Studies program of the National Center for Education Statistics. The variables are gender; race; socioeconomic status; school type; chosen high school program type; scores on reading, writing, math, science, and social studies. We want to determine which factors are related to the choice of the type of program—academic, vocational, or general—that the students pursue in high school. The response is multinomial with three levels.
+
+```{r}
+data(hsb)
+data = hsb
+```
+
+### 1. Fit a trinomial response model with the other relevant variables as predictors (untransformed).
+```{r}
+mo2 = nnet::multinom(prog ~ gender+race+ses+schtyp+read+write+math+science+socst, data=data)
+summary(mo2)
+```
+
+### 2. For the student with id 99, compute the predicted probabilities of the three possible choices.
+
+```{r}
+predict(mo2,data[data[,"id"]==99,],type="p")
+```
+
+## Happiness
+Data were collected from 39 students in a University of Chicago MBA class and may be found in the dataset `happy`.
+```{r}
+library(faraway)
+data(happy)
+data = happy
+data = data %>% count(happy,money,sex,love,work)
+```
+
+### 1. Build a model for the level of happiness as a function of the other variables.
+```{r}
+mo3<-polr(factor(happy)~money+factor(sex)+factor(love)+factor(work),data=data,weights = n) 
+summary(mo3) 
+```
+
+### 2. Interpret the parameters of your chosen model.
+
+\qquad Because the responding variable is treated as ordinal, so the cumulative model can be interpreted as the distribution of Y, which is $$P(Y>y_i) = logit^{-1}(X\beta_i)$$
+
+\qquad We can also interpret it as odds, which is:$$\log{P(Y>y_i) \over P(Y\leqslant y_i)} = X\beta$$
+
++ $\log{P(Y=3,...,10) \over P(Y=2)} = -0.8388 + X\beta$
++ $\log{P(Y=4,...,10) \over P(Y=3)} = 0.0101 + X\beta$
++ $\log{P(Y=5,...,10) \over P(Y=4)} = 2.4280 + X\beta$
++ ...
+
+### 3. Predict the happiness distribution for subject whose parents earn $30,000 a year,
+who is lonely, not sexually active and has no job.
+```{r}
+new_data = data.frame(matrix(c(30,0,1,1),ncol = 4))
+colnames(new_data) = c("money","sex","love","work")
+pre = predict(mo3,new_data,type="probs") %>% data.frame
+colnames(pre) = "Probability"
+pre["Happy"] = rownames(pre)
+kable(pre)
+ggplot(pre) +
+ aes(x = Happy, weight = Probability) +
+ geom_bar(fill = "#0c4c8a") +
+ theme_minimal()
+```
+
+# newspaper survey on Vietnam War
+A student newspaper conducted a survey of student opinions about the Vietnam War in May 1967. Responses were classified by sex, year in the program and one of four opinions. The survey was voluntary. The data may be found in the dataset `uncviet`.  Treat the opinion as the response and the sex and year as predictors. Build a proportional odds model, giving an interpretation to the estimates.
+
+```{r}
+data(uncviet)
+data = uncviet
+```
+```{r}
+mo4 = polr(policy~sex+year,weights=y,data=data)
+summary(mo4)
+```
+
+\qquad Because the responding variable is treated as ordinal, so the cumulative model can be interpreted as the distribution of Y, which is $$P(Y\geqslant y_i) = logit^{-1}(X\beta_i)$$
+
+\qquad We can further calculate the density of each levels of Y by:$$P(Y=y_i) =P(Y>y_i) -P(Y>y_{i-1})$$
+
++ ${P(Y=B,C,D) \over P(Y=A)} = exp\{-1.1098 + X\beta\}$
++ ${P(Y=C,D) \over P(Y=A,B)} = exp\{-0.0130 + X\beta\}$
++ ${P(Y=D) \over P(Y=A,B,C)} = exp\{2.4417 + X\beta\}$
+
+## pneumonoconiosis of coal miners
+The pneumo data gives the number of coal miners classified by radiological examination into one of three categories of pneumonoconiosis and by the number of years spent working at the coal face divided into eight categories.
+
+```{r}
+data(pneumo,package = "faraway")
+data = pneumo
+```
+
+### 1. Treating the pneumonoconiosis status as response variable as nominal, build a model for predicting the frequency of the three outcomes in terms of length of service and use it to predict the outcome for a miner with 25 years of service.
+
+```{r}
+mo5 = multinom(status~year,weights=Freq,data=data)
+n_d<-as.data.frame(25)
+colnames(n_d)<-"year"
+predict(mo5,newdata=n_d,type="p")
+```
+
+### 2. Repeat the analysis with the pneumonoconiosis status being treated as ordinal. 
+
+```{r}
+mo55 = polr(status~year,weights=Freq,data=data)
+n_d<-as.data.frame(25)
+colnames(n_d)<-"year"
+predict(mo55,newdata=n_d,type="p")
+```
+
+### 3.Now treat the response variable as hierarchical with top level indicating whether
+the miner has the disease and the second level indicating, given they have the
+disease, whether they have a moderate or severe case. 
+
+```{r}
+
+
+```
+
+### 4.  Compare the three analyses.
+
+```{r}
+
+```

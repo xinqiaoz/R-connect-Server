@@ -1,0 +1,66 @@
+---
+title: "MA678 homework 05"
+subtitle: "Multinomial Regression"
+author: "Your Name"
+date: "September 2, 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo  =  FALSE,warning  =  F,message  =  F,out.width = "0.9\\linewidth",dev = "pdf",fig.align   =  'center',dpi = 500)
+pacman::p_load(
+  "tidyverse",
+  "knitr",
+  "arm",
+  "data.table",
+  "foreign",
+  "car",
+  "faraway",
+  "nnet",
+  "reshape2",
+  "VGAM"
+)
+```
+
+## pneumonoconiosis of coal miners
+The pneumo data gives the number of coal miners classified by radiological examination into one of three categories of pneumonoconiosis and by the number of years spent working at the coal face divided into eight categories.
+
+```{r}
+data(pneumo,package = "faraway")
+data = pneumo
+```
+
+### 1. Treating the pneumonoconiosis status as response variable as nominal, build a model for predicting the frequency of the three outcomes in terms of length of service and use it to predict the outcome for a miner with 25 years of service.
+
+```{r}
+mo5 = multinom(status~year,weights=Freq,data=data)
+n_d<-as.data.frame(25)
+colnames(n_d)<-"year"
+predict(mo5,newdata=n_d,type="p")
+```
+
+### 2. Repeat the analysis with the pneumonoconiosis status being treated as ordinal. 
+
+```{r}
+mo55 = polr(status~year,weights=Freq,data=data)
+n_d<-as.data.frame(25)
+colnames(n_d)<-"year"
+predict(mo55,newdata=n_d,type="p")
+```
+
+### 3.Now treat the response variable as hierarchical with top level indicating whether
+the miner has the disease and the second level indicating, given they have the
+disease, whether they have a moderate or severe case. 
+
+```{r}
+
+
+```
+
+### 4.  Compare the three analyses.
+
+```{r}
+
+```
