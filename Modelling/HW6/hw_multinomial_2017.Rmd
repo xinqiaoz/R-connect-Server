@@ -10,18 +10,7 @@ output:
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo  =  FALSE,warning  =  F,message  =  F,out.width = "0.9\\linewidth",dev = "pdf",fig.align   =  'center',dpi = 500)
-pacman::p_load(
-  "tidyverse",
-  "knitr",
-  "arm",
-  "data.table",
-  "foreign",
-  "car",
-  "faraway",
-  "nnet",
-  "reshape2",
-  "VGAM"
-)
+pacman::p_load("tidyverse","knitr","arm","data.table","foreign","car","faraway","nnet","reshape2","VGAM","magrittr")
 ```
 
 ## Multinomial logit: 
@@ -205,17 +194,30 @@ colnames(n_d)<-"year"
 predict(mo55,newdata=n_d,type="p")
 ```
 
-### 3.Now treat the response variable as hierarchical with top level indicating whether
-the miner has the disease and the second level indicating, given they have the
-disease, whether they have a moderate or severe case. 
+### 3.Now treat the response variable as hierarchical with top level indicating whether the miner has the disease and the second level indicating, given they have the disease, whether they have a moderate or severe case.  
 
 ```{r}
-
-
+data %<>% pivot_wider(names_from = status,values_from = Freq)
+data %<>% mutate(n = normal+mild+severe,ill=mild+severe)
+mo3.1 = glm(data = data,cbind(ill,n-ill)~year,family = binomial)
+mo3.2 = glm(data = data,cbind(severe,ill-severe)~year,family = binomial)
+display(mo3.1)
+display(mo3.2)
+year = data.frame(year = 25)
+predict(mo3.1,newdata = year,type = "response")
+predict(mo3.2,newdata = year,type = "response")
+print(0.173701*0.4435842)
+print(0.173701*(1-0.4435842))
+data.frame("Normal"=1-0.07705102-0.09664998,"Mild"=0.09664998,"Severe"=0.07705102)
 ```
 
 ### 4.  Compare the three analyses.
 
 ```{r}
-
+com = data.frame("Normal"=c(0.82778696,0.78172799,1-0.07705102-0.09664998),"Mild"=c(0.09148821,0.09652357,0.09664998),"Severe"=c(0.08072483,0.12174844,0.07705102))
+com = t(com)
+colnames(com) = paste("model",1:3)
+kable(com,align = "c")
 ```
+
+\qquad We can see that the predictions result from model 1 and 3 are almost the same, while model has give higher possibility to severe disease.  
