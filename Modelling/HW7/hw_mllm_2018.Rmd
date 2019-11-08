@@ -1,16 +1,15 @@
 ---
 title: "homework 07"
-author: "Name"
-date: "November 1, 2018"
+author: "Luyin Fu"
+date: "November 3, 2019"
 output:
   pdf_document: default
   html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,out.width="0.9\\linewidth",dev="pdf",fig.align  = 'center',warning = F,message = F)
-pacman::p_load(tidyverse,knitr,arm,data.table,foreign,
-gridExtra,car,stringr,rstan,rstanarm,zoo,kableExtra)
+knitr::opts_chunk$set(echo = F,out.width="0.9\\linewidth",dev="png",fig.align  = 'center',warning = F,message = F,dpi = 500)
+pacman::p_load(ggplot2,knitr,arm,data.table,foreign,gridExtra,car,stringr,rstan,rstanarm,zoo,magrittr,dplyr,tidyr,kableExtra)
 ```
 
 
@@ -41,107 +40,147 @@ hiv.data<-hiv.data[complete.cases(hiv.data[,list(y,time,age.baseline,treatment)]
 
 1. Graph the outcome (the CD4 percentage, on the square root scale) for each child as a function of time.
 ```{r}
-ggplot(hiv.data)+geom_point(aes(x=time,y=y))+
-  xlab("Time")+ ylab("Outcome")
+ggplot(hiv.data)+
+  geom_line(aes(x=time, y=sqrt(CD4PCT),group = newpid))
 ```
 
 2. Each child's data has a time course that can be summarized by a linear fit. Estimate these lines and plot them for all the children.
 
 ```{r}
-mo1 = lm(y~time+factor(newpid)-1, data = hiv.data)
-ggplot(aes(x=time, y=y,color = factor(newpid)), data = hiv.data)+geom_point()+
-  geom_abline(intercept = coef(mo1)[1], slope=coef(mo1)[2:length(coef (mo1))],alpha = 0.2)+
-  xlab("Time")+ ylab("Outcome") + theme(legend.position = "none")
+fit1 = lm(formula=y~time+factor(newpid)-1, data = hiv.data)
+ggplot(hiv.data)+
+  geom_point(aes(x=time, y=y, color = factor(newpid), alpha=0.8))+
+  geom_smooth(aes(x=time, y=y,color = factor(newpid)),method = "lm",se = F)+
+  theme(legend.position = "none")
 ```
 
 
 3. Set up a model for the children's slopes and intercepts as a function of the treatment and age at baseline. Estimate this model using the two-step procedure–first estimate the intercept and slope separately for each child, then fit the between-child models using the point estimates from the first step.
 ```{r}
-child = hiv.data %>% dplyr::select(newpid, age.baseline, treatment)
-child = distinct(child)
-mo1.coef <- data.frame(child,mo1$coefficients[2:length(mo1$coefficients)])
-colnames(mo1.coef) <- c("newpid", "age.baseline", "treatment","coef.id") 
-rownames(mo1.coef) <- 1:250
-mo11 = lm(data = mo1.coef,coef.id~age.baseline+factor(treatment))
-summary(mo11)
+intm <- hiv.data %>%
+  dplyr::select(newpid, age.baseline, treatment) %>%
+  distinct()
+fit1.coef <- data.frame(intm,fit1$coefficients[2:length(fit1$coefficients)]) 
+colnames(fit1.coef) <- c("newpid", "age.baseline", "treatment","coef.id")
+rownames(fit1.coef) <- 1:250
+fit2 = lm(data = fit1.coef,coef.id~age.baseline+factor(treatment)) 
+summary(fit2)
 ```
 
 
 4. Write a model predicting CD4 percentage as a function of time with varying intercepts across children. Fit using `lmer()` and interpret the coefficient for time.
 ```{r}
-mo111 = lmer (y ~ time + (1|newpid), data = hiv.data)
-summary(mo111)
-mo111.coef = data.frame(unique(hiv.data$newpid),coef(mo111)$newpid)
-colnames(mo111.coef) = c("newpid","intercept","time")
-kable(head(coef(mo111)$newpid,10),align = "c")
+fit3 = lmer (y ~ time + (1|newpid), data = hiv.data) 
+summary(fit3)
 ```
 
-\qquad The coefficient for time is -0.3660932, which is the same for all the children, which means for each children, once the time increases by 1 unit, the CD4 percentage on the square root scale will decrease by 0.3660932 units. 
+The coeffcient for time is the same for all children. With every unit increase in time, the square root of CO4 percentage is expected to reduce by 0.3661
 
 
 5. Extend the model in (4) to include child-level predictors (that is, group-level predictors) for treatment and age at baseline. Fit using `lmer()` and interpret the coefficients on time, treatment, and age at baseline.
 
 ```{r}
-mo1 <- lmer (y ~ time + factor(treatment) + age.baseline + (1 | newpid), data = hiv.data)
-summary(mo1)
-kable(head(coef(mo1)$newpid,10),align = "c",digits = 2)
+fit4 <- lmer (y ~ time + factor(treatment) + age.baseline + (1 | newpid), data = hiv.data) 
+summary(fit4)
 ```
 
-\qquad The coefficients for time, treatment and age.baseline are all the same for each children.  
+\qquad Coefficient for time: with every unit increase in time, the square root of CO4 percentage is expected to reduce by 0.135 for children with the same treatment, baseline age.  
 
-\qquad The coefficient for time is -0.3621573, which means when others unchanged, and no matter which child it is, once the time increases by 1 unit, then the CD4 percentage on the square root scale will decrease by 0.3621573 units.  
+\qquad Coefficient for treatment: the average difference of CO4 percentage square root is 0.18 for childern in treatment 2 and treatment 1, if they have the same baseline age and at the same time point.  
 
-\qquad The coefficient for treatment is 0.1800822, which means when others unchanged, and no matter which child it is, the CD4 percentage on the square root scale for children who are under treatment 2 is 0.1800822 more than the CD4 percentage on the square root scale for children who are under treatment 1.  
+\qquad Coefficient for baseline age: with every unit increase in aseline age, the square root of CO4 percentage is expected to reduce by 0.727 for children with the same treatment and at the same time point.  
+
 
 6. Investigate the change in partial pooling from (4) to (5) both graphically and numerically.
 
 ```{r}
-test <- as.data.frame(cbind(unlist(ranef(mo111)),unlist(ranef(mo1)))) 
-colnames(test) <- c("mo111","mo1") 
- 
-ggplot(data=test,aes(x=mo111,y=mo1))+geom_point()+geom_smooth()+xlab("Random effcts with only Time")+
-ylab("Random effects with Time, treatment and age.baseline") 
-
-display(mo111)
-
-display(mo1)
+co.fit.3 = data.frame(fixef(fit3))
+co.fit.3 = co.fit.3 %>% mutate(coef = rownames(co.fit.3))
+co.fit.4 = data.frame(fixef(fit4))
+co.fit.4 = co.fit.4 %>% mutate(coef = rownames(co.fit.4))
+co.fit = full_join(co.fit.3,co.fit.4,by = "coef")
+rownames(co.fit) = co.fit$coef
+co.fit = co.fit %>% select(-coef)
+colnames(co.fit) = c("Model in (4)","Model in (5)")
+kable(co.fit,align = "c",format = "latex",booktabs = T)
 ```
-
-\qquad According to the resulr of two mixed-effect model, the group-level standard deviation and deviance in (5) are lower than those in (4). The group-level predictors play a special role in multilevel modeling by reducing the unexplained group-level variation and thus reducing the group-level standard deviation.  
 
 7. Use the model fit from (5) to generate simulation of predicted CD4 percentages for each child in the dataset at a hypothetical next time point.
 
 ```{r}
-
+new.data = hiv.data %>% select(newpid,treatment,age.baseline) %>% distinct()
+new.data = new.data %>% mutate(time = 2)
+pre = predict(fit4,newdata = new.data,type = "response")
+pre = cbind(pre,new.data)
+colnames(pre) = c("y","newpid","treatment","age.baseline","time")
+kable(head(pre,10),align = "c",format = "latex",booktabs = T)
 ```
 
 8. Use the same model fit to generate simulations of CD4 percentages at each of the time periods for a new child who was 4 years old at baseline.
 
 ```{r}
-
+time_point=sort(unique(hiv.data$time)) %>% data.frame()
+colnames(time_point) = "time"
+new.data = time_point %>% mutate(treatment = 2, age.baseline = 4)
+pre = data.frame(predict(fit4,newdata = new.data,re.form = NA))
+colnames(pre) = "y"
+pre = cbind(pre,new.data)
+kable(head(pre,10),align = "c",format = "latex",booktabs = T)
 ```
-
 
 9. Posterior predictive checking: continuing the previous exercise, use the fitted model from (5) to simulate a new dataset of CD4 percentages (with the same sample size and ages of the original dataset) for the final time point of the study, and record the average CD4 percentage in this sample. Repeat this process 1000 times and compare the simulated distribution to the observed CD4 percentage at the final time point for the actual data.
 ```{r}
-
+# new.data = hiv.data %>% select(newpid,treatment,age.baseline) %>% distinct()
+# new.data = new.data %>% mutate(time = 1.9383333)
+# pre = predict(fit4,newdata = new.data)
+# new.data[paste0("pre",1)] = pre
+# iter = hiv.data %>% select(newpid,treatment,age.baseline) %>% distinct()
+# iter = iter %>% mutate(time = 1.9383333)
+# pre.result = iter
+# for(i in 1:1000){
+#   pre = predict(fit4,newdata = iter)
+#   pre.result[paste0("pre",i)] = pre
+# }
+#the final time measurement is different for each child
 ```
 
-10. Extend the modelto allow for varying slopes for the time predictor.
+10. Extend the model to allow for varying slopes for the time predictor.
 ```{r}
-
+#time is not a group level predictor
+fit6 <- lmer(formula = y ~ factor(treatment) + age.baseline + time + (1 + time | newpid), 
+             data = hiv.data)
+summary(fit6)
 ```
 
 
 11. Next fit a model that does not allow for varying slopes but does allow for different coefficients for each time point (rather than fitting the linear trend).
 ```{r}
-
+fit7 <- lmer(formula = y ~ factor(treatment) + age.baseline + time + 
+               (time - 1| newpid), 
+             data = hiv.data)
 ```
 
 
 12. Compare the results of these models both numerically and graphically.
 ```{r}
+summary(fit6)
+summary(fit7)
 
+E=data.frame(coef(fit6)$newpid) 
+E %<>% mutate(newpid=rownames(E))
+ggplot(hiv.data)+
+  geom_point(aes(x=time, y=y, color = factor(newpid), alpha=0.8))+
+  geom_abline(intercept = E$X.Intercept., slope=E$time, color=factor(E$newpid), alpha=0.5)+
+  theme(legend.position = "none")+
+  ggtitle("varying slopes")
+
+G=data.frame(coef(fit7)$newpid) 
+G %<>% mutate(newpid=rownames(G))
+ggplot(hiv.data)+
+  geom_point(aes(x=time, y=y, color = factor(newpid), alpha=0.8))+
+  geom_abline(intercept = G$X.Intercept., slope=G$time, color=factor(G$newpid), alpha=0.5)+
+  theme(legend.position = "none")+
+  ggtitle("different coefficients for each time point")
 ```
 
 
@@ -162,35 +201,61 @@ olympics1932$criterion<-str_trim(olympics1932_na$criterion)
 1. Construct a $7\times 7 \times 2$ array of the data (ordered by skater, judge, and judging criterion).
 
 ```{r}
-
+H1 <- olympics1932 %>% filter(criterion=="Program")
+H2 <- olympics1932 %>% filter(criterion=="Performance")
+Olympics1=array(dim = c(7,7,2))
+Olympics1[,,1]=as.matrix(H1[-c(1,2)])
+Olympics1[,,2]=as.matrix(H2[-c(1,2)])
+print(Olympics1)
 ```
 
 2. Reformulate the data as a $98\times 4$ array (similar to the top table in Figure 11.7), where the first two columns are the technical merit and artistic impression scores, the third column is a skater ID, and the fourth column is a judge ID.
 
 ```{r}
+Olympics2 <- olympics1932 %>% 
+  pivot_longer(-c(1,2), names_to = "judge ID", values_to="score") %>%
+  pivot_wider(names_from = "criterion", values_from="score") %>%
+  separate(col = `judge ID`, into = c("nevermind", "judge"), sep = "_", remove = T) %>%
+  select(Program, Performance, pair, judge)
+kable(head(Olympics2,10), align = "c",format = "latex",booktabs = T)
 
 ```
 
 3. Add another column to this matrix representing an indicator variable that equals 1 if the skater and judge are from the same country, or 0 otherwise.
 
-```{r}
-
+```{r, warning=F}
+data = Olympics2
+data = data %>% mutate(same.country = ifelse(data$pair==as.numeric(data$judge),1,0))
 ```
 
 4. Write the notation for a non-nested multilevel model (varying across skaters and judges) for the technical merit ratings and fit using lmer().
 ```{r}
-
+fit8 <- lmer(Program ~  (1 | pair) + (1 | judge), data = data)
+summary(fit8)
 ```
 
 5. Fit the model in (4) using the artistic impression ratings.
 ```{r}
-
+fit9 <- lmer(Performance ~ (1 | pair) + (1 | judge) ,data = data)
+summary(fit9)
 ```
 
 6. Display your results for both outcomes graphically.
 
 ```{r}
+H=data.frame(coef(fit8)$judge) 
+H %<>% mutate(pair=rownames(H))
+ggplot(data)+
+  geom_point(aes(x=as.factor(pair), y=Program, color=as.factor(pair)))+
+  geom_abline(intercept = H$X.Intercept., slope= rep(0,7), color=H$pair, alpha=0.5)+
+  scale_x_discrete(breaks = seq(1,7,1))
 
+I=data.frame(coef(fit9)$judge) 
+I %<>% mutate(pair=rownames(I))
+ggplot(data)+
+  geom_point(aes(x=as.factor(pair), y=Performance, color=as.factor(pair)))+
+  geom_abline(intercept = I$X.Intercept., slope= rep(0,7), color=I$pair, alpha=0.5)+
+  scale_x_discrete(breaks = seq(1,7,1))
 ```
 
 7. (optional) Use posterior predictive checks to investigate model fit in (4) and (5).
@@ -201,7 +266,13 @@ olympics1932$criterion<-str_trim(olympics1932_na$criterion)
 
 ## Different ways to write the model:
 
-Using any data that are appropriate for a multilevel model, write the model in the five ways discussed in Section 12.5 of Gelman and Hill.
+Using any data that are appropriate for a multilevel model, write the model in the five ways discussed in Section 12.5 of Gelman and Hill.  
+
+\qquad Use the Olympic data as example and we set the technical merit as response variable, and with no predictors, treat each athelete as a group with score from each judge, the score of each athelete is $y_{ij}$ means the score of athelete i from judge j.  
+
++ model in way 1: $y_{ij} = N(\alpha_i,\sigma^2), \alpha_i = \rho + \rho_1u_i+\varepsilon, \varepsilon = N(0,\sigma_{\alpha}^2)$, here the $\alpha_i$ is the mean of each athlete, the score of each athlete comply with normal distribution, at the same time, the mean of each athlete also comply with normal distribution, but the mean are different cross athletes;
+
++ model in way 2: $y_{ij} = N(\alpha_i,\sigma^2), \alpha_i = N(\rho + \rho_1u_i,\sigma_{\alpha}^2)$, this model is exactly the same with way 1, just in way 1, the variability of $\alpha_i$ is introduced by $\varepsilon_i$, here we directly represent $\alpha_i$ as a random variable.  
 
 ## Models for adjusting individual ratings: 
 
