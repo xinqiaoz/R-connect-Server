@@ -1,0 +1,113 @@
+---
+title: "Bayesian HW5"
+author: "Kerui Cao"
+date: "11/10/2019"
+output: pdf_document
+---
+```{r setup,echo=F}
+knitr::opts_chunk$set(echo = T,out.width="0.9\\linewidth",dev="png",fig.align  = 'center',warning = F,message = F,dpi = 500)
+pacman::p_load(tidyverse,knitr,arm,foreign,gridExtra,magrittr,dplyr,tidyr,rstan,bayesplot)
+```
+
+# BDA Problem 11.2
+
+\qquad Metropolis algorithm: Replicate the computations for the bioassay example of Section 3.7 using the Metropolis algorithm. Be sure to define your starting points and your jumping rule. Compute with log-densities (see page 261). Run the simulations long enough for approximate convergence.  
+
+```{r BDA11.2}
+a.c = 0.8
+b.c = 7.7
+a.sd = 1
+b.sd = 4.9
+
+mcmc_array <- function (ns, nchains = 1, params) {
+  nparams <- length(params)
+  array(dim = c(ns, nchains, nparams),
+        dimnames = list(iterations = NULL,
+                        chains = paste0("chain", 1:nchains),
+                        parameters = params))
+}
+
+data = data.frame("y" = c(0,1,3,5),
+                  "n" = c(5,5,5,5),
+                  "x" = c(-0.86,-0.3,-0.05,0.73))
+
+in.lo = function(al,be){
+  the = al + be * data$x
+  the = invlogit(the)
+  return(the)
+}
+
+po = function(al,be){
+  the = in.lo(al=al,be=be)
+  sum.cho = sum(lchoose(n = data$n,k = data$y))
+  p2 = sum(data$y*log(the))
+  p3 = sum(log(1-the)*(data$n-data$y))
+  lopo = exp(sum.cho + p2 + p3)
+  return(lopo)
+}
+
+nc = 4
+ns = 10000
+
+cs = c("Alpha","Beta","Lp_")
+sims = mcmc_array(ns,nchains = nc, params = cs)
+for(j in 1:nc){
+  for(i in 1:ns){
+  a.s = rnorm(n = 1,mean = a.c,sd = a.sd)
+  b.s = rnorm(n = 1,mean = b.c,sd = b.sd)
+  up = po(al = a.s,be = b.s)*dnorm(a.s,mean = 0.8,sd = 1)*dnorm(b.s,mean = 7.7,sd = 4.9)
+  do = po(al = a.c,be = b.c)*dnorm(a.c,mean = 0.8,sd = 1)*dnorm(b.c,mean = 7.7,sd = 4.9)
+  r = up/do
+  a = runif(1)
+  if(r >a){
+    a.c = a.s
+    b.c = b.s
+  }
+  post = po(al = a.c,be = b.c)
+  sims[i,j,] = c(a.c,b.c,post)
+  }
+}
+```
+
+```{r}
+mcmc_trace(sims, cs)
+mcmc_acf(sims, cs)
+mcmc_dens_overlay(sims, cs)
+mcmc_hist(sims, cs)
+```
+
+# BDA Problem 11.3
+
+```{r echo=FALSE}
+data = data.frame("machine.1" = c(83,92,92,46,67),
+                  "machine.2" = c(117,109,114,104,87),
+                  "machine.3" = c(101,93,92,86,67),
+                  "machine.4" = c(105,119,116,102,116),
+                  "machine.5" = c(79,97,103,79,92),
+                  "machine.6" = c(57,92,104,77,100))
+```
+
+```{r}
+mo1 = stan_model("machine.stan")
+```
+```{r include=FALSE}
+ns = 10000
+y1 = data$machine.1
+y2 = data$machine.2
+y3 = data$machine.3
+y4 = data$machine.4
+y5 = data$machine.5
+y6 = data$machine.6
+N = length(y1)
+sf = sampling(mo1,iter = ns,chains = 4, data = c("N","y1","y2","y3","y4","y5","y6"))
+```
+```{r}
+monitor(sf)
+sims <- as.array(sf)
+params <- c(paste0("mu", 0:6), "tao", "sigma", "lp__")
+mcmc_trace(sims, params)
+mcmc_acf(sims, params)
+mcmc_dens_overlay(sims, params)
+mcmc_hist(sims, params)
+```
+

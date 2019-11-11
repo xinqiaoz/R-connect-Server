@@ -9,12 +9,13 @@ output:
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(echo  =  FALSE,warning  =  F,message  =  F,out.width = "0.9\\linewidth",dev = "pdf",fig.align   =  'center',dpi = 500)
-pacman::p_load("tidyverse","knitr","arm","data.table","foreign","car","faraway","nnet","reshape2","VGAM","magrittr")
+knitr::opts_chunk$set(echo = F,out.width="0.9\\linewidth",dev="png",fig.align  = 'center',warning = F,message = F,dpi = 500)
+pacman::p_load(ggplot2,knitr,arm,data.table,foreign,gridExtra,car,stringr,rstan,rstanarm,zoo,magrittr,dplyr,tidyr,kableExtra)
 ```
 
 ## Multinomial logit: 
 Using the individual-level survey data from the 2000 National Election Study (data in folder nes), predict party identification (which is on a 7-point scale) using ideology and demographics with an ordered multinomial logit model.
+
 ```{r, echo = FALSE}
 nes5200 = read.dta("http://www.stat.columbia.edu/~gelman/arm/examples/nes/nes5200_processed_voters_realideo.dta")
 #saveRDS(nes5200,"nes5200.rds")

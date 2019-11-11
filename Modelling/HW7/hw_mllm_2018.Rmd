@@ -1,6 +1,6 @@
 ---
 title: "homework 07"
-author: "Luyin Fu"
+author: "Kerui Cao"
 date: "November 3, 2019"
 output:
   pdf_document: default
