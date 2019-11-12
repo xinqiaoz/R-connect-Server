@@ -79,10 +79,53 @@ for(j in 1:nc){
 ```
 
 ```{r}
-summary(sims[,1,])
-sims = sims[5000:10000,,]
-mcmc_trace(sims)
-mcmc_acf(sims)
-mcmc_dens_overlay(sims)
-mcmc_hist(sims)
+monitor(sims[,c(1,3),])
+sim = sims[5000:10000,,]
+mcmc_trace(sim)
+mcmc_acf(sim)
+mcmc_dens_overlay(sim)
+mcmc_hist(sim)
 ```
+```{r}
+quantile(sim[,,1],c(0.025,0.975))
+quantile(sim[,,2],c(0.025,0.975))
+quantile(sim[,,3],c(0.025,0.975))
+```
+
+\qquad So the 95% Confidence interval is
+
++ $\lambda$ : [-0.0668,0.4698]
++ $\mu$ : [2.3735,6.1785]
++ $\sigma$ : [0.9176,17.7471]
+
+```{r}
+ss = n
+lambda = sim[,,1]
+mu = sim[,,2]
+sigma = sim[,,3]
+la.sa = sample(x = lambda,size = ss)
+mu.sa = sample(x = mu,size = ss)
+si.sa = sample(x = sigma,size = ss)
+w = rnorm(n = ss,mean = mu.sa,sd = si.sa)
+y = array(dim = ss)
+for(i in 1:ss){
+  if(abs(la.sa[i])<0.005){y[i] = exp(w[i])}else{
+    y[i] = (w[i]*(la.sa[i]+1)^(la.sa[i]))
+  }
+}
+sam = data.frame(cbind(y,w,la.sa,mu.sa,si.sa))
+#sam %<>% filter(y>0)
+com = data.frame("pre" = sam$y,"data" = data$y) %>% filter(pre >0)
+quantile(com$pre,c(0.025,0.975))
+com = pivot_longer(data = com,cols = colnames(com),names_to = "type", values_to = "value")
+com <- com %>%
+ filter(value >= 0L & value <= 50L)
+
+ggplot(com) +
+ aes(x = type, y = value) +
+ geom_boxplot(fill = "#0c4c8a") 
+```
+
+\qquad The 95% Confidence Interval for $\tilde{y}$ is [0.0707,40.4988]
+
+\qquad From the boxplot, we can see that the predicted $\tilde{y}$ has obvious lower mean and variance.  
