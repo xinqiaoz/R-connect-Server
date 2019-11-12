@@ -1,4 +1,4 @@
-data {
+mcmcdata {
   int<lower=0> J;
   int<lower=0> n[J];
   int<lower=0> idx[J]; // index shifts in y

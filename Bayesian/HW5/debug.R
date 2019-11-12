@@ -44,30 +44,37 @@ w.mu = function(la,mu){
   return(re)
 }
 
+mean.mu = function(la){
+  w = wi(la = la)
+  return(mean(w))
+}
+
 si.n = function(si){
   return(si^(-(n+1)/2))
 }
 for(j in 1:nc){
   for(i in 1:ns){
     la.s = rnorm(n = 1,mean = la.c,sd = la.sd)
-    up = sum(la.s*log(y))+w.mu(la = la.s,mu = mu.c)/(2*si.c)
-    down = sum(la.c*log(y))+w.mu(la = la.c,mu = mu.c)/(2*si.c)
+    up = sum((la.s-1)*log(y))+w.mu(la = la.s,mu = mu.c)/(2*si.c)
+    down = sum((la.c-1)*log(y))+w.mu(la = la.c,mu = mu.c)/(2*si.c)
     r1 = exp(up-down)
     if(r1 >= runif(1)){la.c = la.s}else{la.c = la.c}
     
-    mu.s = rnorm(n = 1,mean = mu.c,sd = mu.sd)
-    up = w.mu(la = la.c,mu = mu.s)/(2*si.c)
-    down = up = w.mu(la = la.c,mu = mu.c)/(2*si.c)
-    r2 = exp(up - down)
-    if(r2 >= runif(1)){mu.c = mu.s}else{mu.c = mu.c}
+    mu.s = rnorm(n = 1,mean = mean.mu(la = la.c),sd = si.c/n)
+    # mu.s = rnorm(n = 1,mean = mu.c,sd = mu.sd)
+    # up = w.mu(la = la.c,mu = mu.s)/(2*si.c)
+    # down = up = w.mu(la = la.c,mu = mu.c)/(2*si.c)
+    # r2 = exp(up - down)
+    # if(r2 >= runif(1)){mu.c = mu.s}else{mu.c = mu.c}
     
-    si.s = rnorm(n = 1,mean = si.c,sd = si.sd)
-    if(si.s >0){
-      up = log(si.s) + w.mu(la = la.c,mu = mu.c)/(2*si.s)
-      down = log(si.c) + w.mu(la = la.c,mu = mu.c)/(2*si.c)
-      r3 = exp(up - down)
-      if(r3 >= runif(1)){si.c = si.s}else{si.c = si.c}
-    }
+    si.s = 1/rgamma(n = 1,shape = (n-1)/2,rate = -w.mu(la = la.c,mu = mu.c)/2)
+    # si.s = rnorm(n = 1,mean = si.c,sd = si.sd)
+    # if(si.s >0){
+    #   up = log(si.s) + w.mu(la = la.c,mu = mu.c)/(2*si.s)
+    #   down = log(si.c) + w.mu(la = la.c,mu = mu.c)/(2*si.c)
+    #   r3 = exp(up - down)
+    #   if(r3 >= runif(1)){si.c = si.s}else{si.c = si.c}
+    # }
 
 
     lp = 1/sqrt(si.c)*prod(y^la.c*1/(sqrt(2*pi*si.c)))*exp(w.mu(la = la.c,mu = mu.c)/(2*si.c))
